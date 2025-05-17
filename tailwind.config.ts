@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,13 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// CAPITOL codesign brand colors
+				capitol: {
+					charcoal: '#222222', // Dark banner color
+					orange: '#FF9966',    // "code" text color
+					gray: '#999999',      // "sign" text color
+					cream: '#FFFEEF',     // Background color
 				}
 			},
 			borderRadius: {
