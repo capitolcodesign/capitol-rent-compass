@@ -30,7 +30,7 @@ const SignupSchema = z.object({
 const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
-  const { login, signUp, isLoading, isAuthenticated } = useAuth();
+  const { login, signUp, isLoading, isAuthenticated, session } = useAuth();
   const navigate = useNavigate();
   
   // Login form
@@ -53,17 +53,20 @@ const Login: React.FC = () => {
     },
   });
   
+  // This effect runs whenever isAuthenticated or session changes
   useEffect(() => {
-    // If already authenticated, redirect to dashboard
-    if (isAuthenticated) {
+    // If user is authenticated, redirect to dashboard
+    if (isAuthenticated && session) {
+      console.log("User authenticated, redirecting to dashboard");
       navigate('/');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, session, navigate]);
   
   const handleLogin = async (values: z.infer<typeof LoginSchema>) => {
     try {
+      console.log("Attempting login with:", values.email);
       await login(values.email, values.password);
-      // Navigation happens in the useEffect above when isAuthenticated changes
+      // Navigation happens in the useEffect when isAuthenticated changes
     } catch (error) {
       console.error('Login error:', error);
     }

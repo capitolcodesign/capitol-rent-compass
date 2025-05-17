@@ -52,6 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Function to fetch user profile from Supabase
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log("Fetching profile for user:", userId);
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
@@ -64,6 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       if (profile) {
+        console.log("Profile fetched successfully:", profile);
         return {
           id: userId,
           email: session?.user?.email || '',
@@ -84,6 +86,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     checkOperationalHours();
     const interval = setInterval(checkOperationalHours, 60000);
+    
+    console.log("Setting up auth state listener");
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -132,6 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
+      console.log("Attempting login for:", email);
       const { data, error } = await supabase.auth.signInWithPassword({ 
         email, 
         password 
@@ -147,12 +152,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       if (data.user) {
-        const profile = await fetchUserProfile(data.user.id);
-        setUser(profile);
+        // Session will be handled by the onAuthStateChange listener
+        console.log("Login successful for user:", data.user.id);
         
         toast({
           title: 'Login Successful',
-          description: `Welcome back, ${profile?.firstName || 'User'}!`,
+          description: 'Welcome back!',
         });
       }
     } catch (error) {

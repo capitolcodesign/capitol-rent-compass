@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -33,12 +32,14 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (!isAuthenticated) {
+    console.log("User not authenticated, redirecting to login");
     return <Navigate to="/login" replace />;
   }
   
   return <>{children}</>;
 };
 
+// We're keeping the routes logic in a separate component that is rendered INSIDE the AuthProvider
 const AppRoutes = () => {
   return (
     <Routes>
@@ -106,6 +107,7 @@ const AppRoutes = () => {
   );
 };
 
+// The main App component wraps everything with the necessary providers
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
