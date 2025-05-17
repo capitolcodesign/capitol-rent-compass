@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Building2, 
@@ -26,67 +26,62 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
-// Mock property data
-const mockProperties = [
-  { 
-    id: 'P001', 
-    address: '123 Oak Avenue, Sacramento', 
-    zip: '95814', 
-    type: 'Multi-family', 
-    units: 24, 
-    builtYear: 2005,
-    lastAnalysis: '2025-04-15'
-  },
-  { 
-    id: 'P002', 
-    address: '456 Pine Street, Sacramento', 
-    zip: '95818', 
-    type: 'Single-family', 
-    units: 1, 
-    builtYear: 1998,
-    lastAnalysis: '2025-03-22'
-  },
-  { 
-    id: 'P003', 
-    address: '789 Elm Road, Sacramento', 
-    zip: '95822', 
-    type: 'Multi-family', 
-    units: 12, 
-    builtYear: 2010,
-    lastAnalysis: '2025-05-01'
-  },
-  { 
-    id: 'P004', 
-    address: '101 Cedar Lane, Sacramento', 
-    zip: '95825', 
-    type: 'Single-family', 
-    units: 1, 
-    builtYear: 2001,
-    lastAnalysis: '2025-02-18'
-  },
-  { 
-    id: 'P005', 
-    address: '202 Maple Drive, Sacramento', 
-    zip: '95833', 
-    type: 'Multi-family', 
-    units: 8, 
-    builtYear: 2015,
-    lastAnalysis: '2025-04-30'
-  },
-];
+// Property type definition
+interface Property {
+  id: string;
+  property_id: string;
+  address: string;
+  zip: string;
+  type: string;
+  units: number;
+  built_year: number;
+  last_analysis: string | null;
+}
 
 const PropertyList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [propertyType, setPropertyType] = useState('all');
   const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  // Fetch properties from Supabase
+  const { data: properties, isLoading, error } = useQuery({
+    queryKey: ['properties'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*');
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      return data as Property[];
+    }
+  });
+  
+  // Show error toast if fetch fails
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: 'Error',
+        description: `Failed to load properties: ${error.message}`,
+        variant: 'destructive',
+      });
+    }
+  }, [error, toast]);
   
   // Filter properties based on search and filters
-  const filteredProperties = mockProperties.filter(property => {
-    const matchesSearch = property.address.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredProperties = properties?.filter(property => {
+    const matchesSearch = property.address.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          property.property_id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = propertyType === 'all' || property.type === propertyType;
     return matchesSearch && matchesType;
-  });
+  }) || [];
   
   return (
     <div>
@@ -139,52 +134,62 @@ const PropertyList: React.FC = () => {
         </CardContent>
       </Card>
       
+      {/* Loading state */}
+      {isLoading && (
+        <div className="text-center py-12">
+          <div className="h-12 w-12 mx-auto border-4 border-t-primary rounded-full animate-spin"></div>
+          <p className="mt-4 text-lg font-medium">Loading properties...</p>
+        </div>
+      )}
+      
       {/* Property list */}
-      <div className="grid gap-4">
-        {filteredProperties.map((property) => (
-          <Card key={property.id} className="hover:border-primary/50 cursor-pointer transition-colors" 
-              onClick={() => navigate(`/properties/${property.id}`)}>
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start space-x-4">
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Building2 className="h-6 w-6 text-primary" />
-                  </div>
-                  
-                  <div>
-                    <h3 className="font-medium mb-1">{property.address}</h3>
-                    <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                      <span>ID: {property.id}</span>
-                      <span>•</span>
-                      <span>ZIP: {property.zip}</span>
-                      <span>•</span>
-                      <span>Built: {property.builtYear}</span>
+      {!isLoading && (
+        <div className="grid gap-4">
+          {filteredProperties.map((property) => (
+            <Card key={property.id} className="hover:border-primary/50 cursor-pointer transition-colors" 
+                onClick={() => navigate(`/properties/${property.property_id}`)}>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start space-x-4">
+                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Building2 className="h-6 w-6 text-primary" />
+                    </div>
+                    
+                    <div>
+                      <h3 className="font-medium mb-1">{property.address}</h3>
+                      <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                        <span>ID: {property.property_id}</span>
+                        <span>•</span>
+                        <span>ZIP: {property.zip}</span>
+                        <span>•</span>
+                        <span>Built: {property.built_year}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="flex items-center space-x-4">
-                  <div className="text-right">
-                    <Badge variant="outline">{property.type}</Badge>
-                    <div className="text-sm mt-1">{property.units} unit{property.units > 1 ? 's' : ''}</div>
+                  
+                  <div className="flex items-center space-x-4">
+                    <div className="text-right">
+                      <Badge variant="outline">{property.type}</Badge>
+                      <div className="text-sm mt-1">{property.units} unit{property.units > 1 ? 's' : ''}</div>
+                    </div>
+                    <ArrowRight className="h-5 w-5 text-muted-foreground" />
                   </div>
-                  <ArrowRight className="h-5 w-5 text-muted-foreground" />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-        
-        {filteredProperties.length === 0 && (
-          <div className="text-center py-12">
-            <Building2 className="h-12 w-12 mx-auto text-muted-foreground/60" />
-            <h3 className="mt-4 text-lg font-medium">No properties found</h3>
-            <p className="text-muted-foreground mt-1">
-              Try adjusting your search or filters
-            </p>
-          </div>
-        )}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+          
+          {filteredProperties.length === 0 && !isLoading && (
+            <div className="text-center py-12">
+              <Building2 className="h-12 w-12 mx-auto text-muted-foreground/60" />
+              <h3 className="mt-4 text-lg font-medium">No properties found</h3>
+              <p className="text-muted-foreground mt-1">
+                Try adjusting your search or filters
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
