@@ -1,6 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 
 // Define user roles
 export type UserRole = 'admin' | 'staff' | 'auditor';
@@ -20,41 +22,19 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
+  logout: () => Promise<void>;
   checkOperationalHours: () => boolean;
   isWithinOperationalHours: boolean;
+  session: Session | null;
 }
 
 // Create the context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demo purposes - in production this would be in Supabase
-const MOCK_USERS: User[] = [
-  {
-    id: '1',
-    email: 'admin@shra.org',
-    firstName: 'Admin',
-    lastName: 'User',
-    role: 'admin',
-  },
-  {
-    id: '2',
-    email: 'staff@shra.org',
-    firstName: 'Staff',
-    lastName: 'Member',
-    role: 'staff',
-  },
-  {
-    id: '3',
-    email: 'auditor@shra.org',
-    firstName: 'Audit',
-    lastName: 'Reviewer',
-    role: 'auditor',
-  },
-];
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isWithinOperationalHours, setIsWithinOperationalHours] = useState(true);
   
@@ -69,65 +49,177 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return isWithinHours;
   };
   
+  // Function to fetch user profile from Supabase
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error) throw error;
+      
+      if (profile) {
+        return {
+          id: userId,
+          email: session?.user?.email || '',
+          firstName: profile.first_name || '',
+          lastName: profile.last_name || '',
+          role: profile.role as UserRole || 'staff'
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
+  };
+
+  // Set up auth state listener and check for existing session
   useEffect(() => {
-    // Check operational hours
     checkOperationalHours();
-    
-    // Set interval to check operational hours every minute
     const interval = setInterval(checkOperationalHours, 60000);
     
-    // Check for existing session
-    const storedUser = localStorage.getItem('shra_user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        console.error('Error parsing stored user:', e);
-        localStorage.removeItem('shra_user');
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        setSession(currentSession);
+        
+        if (currentSession?.user) {
+          // Don't call Supabase methods directly inside the callback
+          // Use setTimeout to prevent potential deadlocks
+          setTimeout(async () => {
+            const profile = await fetchUserProfile(currentSession.user.id);
+            setUser(profile);
+          }, 0);
+        } else {
+          setUser(null);
+        }
+        
+        setIsLoading(false);
       }
-    }
+    );
     
-    setIsLoading(false);
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      
+      if (currentSession?.user) {
+        fetchUserProfile(currentSession.user.id).then(profile => {
+          setUser(profile);
+          setIsLoading(false);
+        });
+      } else {
+        setIsLoading(false);
+      }
+    });
     
-    return () => clearInterval(interval);
+    return () => {
+      subscription.unsubscribe();
+      clearInterval(interval);
+    };
   }, []);
   
-  // Mock login function - would use Supabase Auth in production
+  // Login function using Supabase Auth
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Find user by email (simplified auth for demo)
-    const foundUser = MOCK_USERS.find(u => u.email.toLowerCase() === email.toLowerCase());
-    
-    if (foundUser && password === 'password') { // In real app, we'd verify the password properly
-      setUser(foundUser);
-      localStorage.setItem('shra_user', JSON.stringify(foundUser));
-      toast({
-        title: 'Login Successful',
-        description: `Welcome back, ${foundUser.firstName}!`,
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
       });
-    } else {
-      toast({
-        title: 'Login Failed',
-        description: 'Invalid email or password. Please try again.',
-        variant: 'destructive',
-      });
+      
+      if (error) {
+        toast({
+          title: 'Login Failed',
+          description: error.message,
+          variant: 'destructive',
+        });
+        throw error;
+      }
+      
+      if (data.user) {
+        const profile = await fetchUserProfile(data.user.id);
+        setUser(profile);
+        
+        toast({
+          title: 'Login Successful',
+          description: `Welcome back, ${profile?.firstName || 'User'}!`,
+        });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+    } finally {
+      setIsLoading(false);
     }
+  };
+  
+  // Sign up function using Supabase Auth
+  const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
+    setIsLoading(true);
     
-    setIsLoading(false);
+    try {
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName
+          }
+        }
+      });
+      
+      if (error) {
+        toast({
+          title: 'Sign Up Failed',
+          description: error.message,
+          variant: 'destructive',
+        });
+        throw error;
+      }
+      
+      toast({
+        title: 'Sign Up Successful',
+        description: 'Please check your email to confirm your account.',
+      });
+      
+      // Note: The profile will be created automatically via the database trigger we set up
+      
+    } catch (error) {
+      console.error('Sign up error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   // Logout function
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('shra_user');
-    toast({
-      title: 'Logged Out',
-      description: 'You have been successfully logged out.',
-    });
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        toast({
+          title: 'Logout Failed',
+          description: error.message,
+          variant: 'destructive',
+        });
+        throw error;
+      }
+      
+      setUser(null);
+      setSession(null);
+      
+      toast({
+        title: 'Logged Out',
+        description: 'You have been successfully logged out.',
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
   
   return (
@@ -136,9 +228,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isLoading, 
       isAuthenticated: !!user,
       login,
+      signUp,
       logout,
       checkOperationalHours,
-      isWithinOperationalHours
+      isWithinOperationalHours,
+      session
     }}>
       {children}
     </AuthContext.Provider>
