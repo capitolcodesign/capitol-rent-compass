@@ -14,5 +14,61 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true
   }
 });
+
+// Utility function to create sample users
+export const createSampleUsers = async () => {
+  try {
+    // Create admin user
+    const { error: adminError } = await supabase.auth.signUp({
+      email: 'admin@shra.org',
+      password: 'SHRA123!',
+      options: {
+        data: {
+          first_name: 'Admin',
+          last_name: 'User',
+          role: 'admin'
+        }
+      }
+    });
+    
+    if (adminError) throw adminError;
+    
+    // Create staff user
+    const { error: staffError } = await supabase.auth.signUp({
+      email: 'staff@shra.org',
+      password: 'SHRA123!',
+      options: {
+        data: {
+          first_name: 'Staff',
+          last_name: 'User',
+          role: 'staff'
+        }
+      }
+    });
+    
+    if (staffError) throw staffError;
+    
+    // Create auditor user
+    const { error: auditorError } = await supabase.auth.signUp({
+      email: 'auditor@shra.org',
+      password: 'SHRA123!',
+      options: {
+        data: {
+          first_name: 'Auditor',
+          last_name: 'User',
+          role: 'auditor'
+        }
+      }
+    });
+    
+    if (auditorError) throw auditorError;
+    
+    return { success: true, message: 'Sample users created successfully!' };
+  } catch (error) {
+    console.error('Error creating sample users:', error);
+    return { success: false, message: 'Failed to create sample users' };
+  }
+};

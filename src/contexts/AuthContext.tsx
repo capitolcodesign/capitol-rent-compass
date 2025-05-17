@@ -58,7 +58,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', userId)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Profile fetch error:', error);
+        return null;
+      }
       
       if (profile) {
         return {
@@ -85,6 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
+        console.log('Auth state changed:', event, currentSession?.user?.id);
         setSession(currentSession);
         
         if (currentSession?.user) {
@@ -93,17 +97,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setTimeout(async () => {
             const profile = await fetchUserProfile(currentSession.user.id);
             setUser(profile);
+            setIsLoading(false);
           }, 0);
         } else {
           setUser(null);
+          setIsLoading(false);
         }
-        
-        setIsLoading(false);
       }
     );
     
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log('Initial session check:', currentSession?.user?.id);
       setSession(currentSession);
       
       if (currentSession?.user) {
@@ -162,6 +167,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
+      // Include the first name and last name in the user metadata
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
@@ -182,15 +188,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
       
+      // Show success message
       toast({
         title: 'Sign Up Successful',
-        description: 'Please check your email to confirm your account.',
+        description: 'Your account has been created. Please login to continue.',
       });
       
       // Note: The profile will be created automatically via the database trigger we set up
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Sign up error:', error);
+      toast({
+        title: 'Sign Up Error',
+        description: error.message || 'An unexpected error occurred',
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }

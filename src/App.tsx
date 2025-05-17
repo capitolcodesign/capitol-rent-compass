@@ -12,6 +12,7 @@ import PropertyList from "./pages/PropertyList";
 import RentAnalysis from "./pages/RentAnalysis";
 import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
+import SampleUsersCreator from "./pages/SampleUsersCreator";
 
 // Create a QueryClient for React Query
 const queryClient = new QueryClient({
@@ -42,6 +43,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/sample-users" element={<SampleUsersCreator />} />
       
       <Route path="/" element={
         <ProtectedRoute>
