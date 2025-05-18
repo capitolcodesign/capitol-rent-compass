@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { AuthResponse } from './types';
@@ -118,6 +117,8 @@ export const adminCreateUser = async (
   role: string
 ): Promise<any> => {
   try {
+    console.log("Creating user with role:", role);
+    
     // Use the regular signup method since we don't have admin access
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -143,18 +144,34 @@ export const adminCreateUser = async (
     // Manually create profile after user creation
     if (data.user) {
       try {
-        const { error: profileError } = await supabase
+        // First check if profile already exists
+        const { data: existingProfile } = await supabase
           .from('profiles')
-          .insert({
-            id: data.user.id,
-            first_name: firstName,
-            last_name: lastName,
-            role
-          });
-          
-        if (profileError) {
-          console.error('Error creating profile:', profileError);
-          throw profileError;
+          .select('id')
+          .eq('id', data.user.id)
+          .maybeSingle();
+        
+        // Only create profile if one doesn't exist
+        if (!existingProfile) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              first_name: firstName,
+              last_name: lastName,
+              role
+            });
+            
+          if (profileError) {
+            console.error('Error creating profile:', profileError);
+            toast({
+              title: 'Warning',
+              description: 'User created but profile setup failed',
+              variant: 'destructive',
+            });
+          } else {
+            console.log("Profile created successfully for:", email);
+          }
         }
       } catch (profileErr) {
         console.error('Profile creation error:', profileErr);

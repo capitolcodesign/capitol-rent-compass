@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { adminCreateUser } from '@/contexts/auth/authService';
 
 interface AddUserModalProps {
@@ -68,6 +68,13 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
   const onSubmit = async (data: UserFormValues) => {
     setIsSubmitting(true);
     try {
+      console.log("Submitting user data:", {
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        role: data.role
+      });
+      
       // Use the adminCreateUser function from our auth service
       await adminCreateUser(
         data.email,
