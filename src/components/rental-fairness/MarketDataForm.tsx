@@ -10,11 +10,17 @@ import { Plus, Trash } from "lucide-react";
 interface MarketDataFormProps {
   marketData: MarketData;
   setMarketData: React.Dispatch<React.SetStateAction<MarketData>>;
+  propertyDetails?: {
+    bedrooms: number;
+    bathrooms: number;
+    squareFeet: number;
+  };
 }
 
 const MarketDataForm: React.FC<MarketDataFormProps> = ({ 
   marketData, 
-  setMarketData 
+  setMarketData,
+  propertyDetails
 }) => {
   const handleAverageRentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMarketData(prev => ({

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -142,8 +141,8 @@ const FairnessCalculator: React.FC<FairnessCalculatorProps> = ({ propertyDetails
 
         <TabsContent value="details" className="space-y-4">
           <PropertyDetailsForm 
-            details={details} 
-            setDetails={setDetails} 
+            propertyDetails={details} 
+            setPropertyDetails={setDetails} 
           />
           <div className="flex justify-end mt-6">
             <Button onClick={() => handleNext('details')}>
@@ -171,7 +170,6 @@ const FairnessCalculator: React.FC<FairnessCalculatorProps> = ({ propertyDetails
           <MarketDataForm
             marketData={marketData}
             setMarketData={setMarketData}
-            propertyLocation={details.location}
             propertyDetails={{
               bedrooms: details.bedrooms,
               bathrooms: details.bathrooms,

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,6 +15,7 @@ import PropertyTabs from '@/components/properties/PropertyTabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ChevronLeft } from 'lucide-react';
 import FairnessCalculator from '@/components/rental-fairness/FairnessCalculator';
+import RentalAssistantChat from '@/components/rental-fairness/RentalAssistantChat';
 
 interface PropertyDetail {
   id: string;
