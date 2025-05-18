@@ -30,6 +30,24 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({ propertyId, o
     setUploading(true);
     
     try {
+      // First, let's check if the bucket exists and is public
+      const { data: buckets, error: bucketsError } = await supabase
+        .storage
+        .listBuckets();
+      
+      if (bucketsError) throw bucketsError;
+      
+      let bucketExists = buckets?.some(bucket => bucket.name === 'property_images');
+      
+      if (!bucketExists) {
+        // Create the bucket if it doesn't exist
+        const { error: createBucketError } = await supabase.storage.createBucket('property_images', {
+          public: true
+        });
+        
+        if (createBucketError) throw createBucketError;
+      }
+      
       // Generate a unique file path for the property image
       const fileExt = selectedFile.name.split('.').pop();
       const filePath = `${propertyId}/${Date.now()}.${fileExt}`;
@@ -37,7 +55,10 @@ const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({ propertyId, o
       // Upload the image to storage
       const { error: storageError } = await supabase.storage
         .from('property_images')
-        .upload(filePath, selectedFile);
+        .upload(filePath, selectedFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
       
       if (storageError) throw storageError;
       
