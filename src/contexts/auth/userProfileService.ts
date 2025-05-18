@@ -2,6 +2,7 @@
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { User, UserRole } from './types';
+import { toast } from '@/components/ui/use-toast';
 
 // Function to fetch user profile from Supabase
 export const fetchUserProfile = async (userId: string, session: Session | null): Promise<User | null> => {
@@ -30,13 +31,37 @@ export const fetchUserProfile = async (userId: string, session: Session | null):
       
       if (user_metadata) {
         console.log("Falling back to user metadata from session:", user_metadata);
-        return {
-          id: userId,
-          email: session.user.email || '',
-          firstName: user_metadata.first_name || '',
-          lastName: user_metadata.last_name || '',
-          role: (user_metadata.role as UserRole) || 'staff'
-        };
+        
+        // Try to create a profile from the metadata
+        try {
+          const newProfile = {
+            id: userId,
+            first_name: user_metadata.first_name || '',
+            last_name: user_metadata.last_name || '',
+            role: (user_metadata.role as string) || 'staff'
+          };
+          
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert(newProfile);
+            
+          if (insertError) {
+            console.error("Error creating profile from metadata:", insertError);
+          } else {
+            console.log("Created new profile from metadata for user");
+          }
+          
+          // Return user object based on metadata
+          return {
+            id: userId,
+            email: session.user.email || '',
+            firstName: newProfile.first_name,
+            lastName: newProfile.last_name,
+            role: newProfile.role as UserRole
+          };
+        } catch (createError) {
+          console.error("Error creating profile from metadata:", createError);
+        }
       }
       
       // Create minimal profile as a last resort
@@ -138,6 +163,11 @@ export const fetchUserProfile = async (userId: string, session: Session | null):
     
   } catch (error) {
     console.error('Error fetching user profile:', error);
+    toast({
+      title: 'Profile Error',
+      description: 'Could not fetch your profile. Please try again later.',
+      variant: 'destructive',
+    });
     // Return minimal profile on error
     return {
       id: userId,
@@ -146,5 +176,62 @@ export const fetchUserProfile = async (userId: string, session: Session | null):
       lastName: '',
       role: 'staff' as UserRole
     };
+  }
+};
+
+// Function to create or update user profile
+export const createOrUpdateProfile = async (userId: string, data: {
+  firstName?: string;
+  lastName?: string;
+  role?: UserRole;
+}): Promise<boolean> => {
+  try {
+    const { data: existing, error: fetchError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', userId)
+      .maybeSingle();
+    
+    if (fetchError) {
+      console.error("Error checking for existing profile:", fetchError);
+      return false;
+    }
+    
+    const profileData = {
+      first_name: data.firstName,
+      last_name: data.lastName,
+      role: data.role
+    };
+    
+    if (existing) {
+      // Update existing profile
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update(profileData)
+        .eq('id', userId);
+        
+      if (updateError) {
+        console.error("Error updating profile:", updateError);
+        return false;
+      }
+    } else {
+      // Create new profile
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          ...profileData
+        });
+        
+      if (insertError) {
+        console.error("Error creating profile:", insertError);
+        return false;
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error in createOrUpdateProfile:", error);
+    return false;
   }
 };

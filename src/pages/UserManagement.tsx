@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { AddUserModal } from '@/components/users/AddUserModal';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/auth';
 
 interface UserProfile {
   id: string;
@@ -23,6 +24,7 @@ interface UserProfile {
 
 export default function UserManagement() {
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -34,7 +36,7 @@ export default function UserManagement() {
       // Fetch profiles data from the profiles table
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, role, created_at');
+        .select('*');
         
       if (profilesError) {
         throw profilesError;
@@ -43,34 +45,36 @@ export default function UserManagement() {
       // Log for debugging
       console.log("Fetched profiles:", profilesData?.length || 0);
       
-      // If we have profiles, fetch the corresponding user emails
-      if (profilesData && profilesData.length > 0) {
-        // We need to enrich the profiles with email data from auth.users
-        // We'll do this client-side since we can't directly join with auth.users
-        
-        const enrichedProfiles = await Promise.all(
+      // Successfully fetched profiles
+      if (profilesData) {
+        // Enhance with emails if possible
+        const usersWithEmail = await Promise.all(
           profilesData.map(async (profile) => {
-            try {
-              // For each profile, fetch the user record from auth
-              const { data: userData, error: userError } = await supabase.auth.admin.getUserById(profile.id);
-              
-              if (userError) {
-                console.error('Error fetching user details:', userError);
-                return { ...profile, email: null };
+            let email = null;
+            
+            // Only attempt to fetch user email if we're an admin
+            if (currentUser?.role === 'admin') {
+              try {
+                // Try to get auth user data (this may not work due to RLS)
+                const { data: userData, error: userError } = await supabase.auth.admin.getUserById(profile.id);
+                
+                if (!userError && userData?.user) {
+                  email = userData.user.email;
+                }
+              } catch (error) {
+                console.log('Could not fetch email for user, using placeholder');
               }
-              
-              return { 
-                ...profile, 
-                email: userData?.user?.email || null 
-              };
-            } catch (error) {
-              console.error('Error enriching profile:', error);
-              return { ...profile, email: null };
             }
+            
+            // Return the profile with email if available
+            return { 
+              ...profile, 
+              email: email || `user-${profile.id.substring(0, 8)}@example.com` 
+            };
           })
         );
         
-        setUsers(enrichedProfiles);
+        setUsers(usersWithEmail);
       } else {
         setUsers([]);
       }
@@ -88,7 +92,7 @@ export default function UserManagement() {
   
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [currentUser]);
   
   const filteredUsers = searchQuery.trim() === ''
     ? users
@@ -175,7 +179,7 @@ export default function UserManagement() {
                             </Avatar>
                             <div>
                               <div>{user.first_name || 'Anonymous'} {user.last_name || 'User'}</div>
-                              <div className="text-xs text-muted-foreground">{user.id.slice(0, 8)}...</div>
+                              <div className="text-xs text-muted-foreground">{user.email || user.id.slice(0, 8)}</div>
                             </div>
                           </div>
                         </TableCell>
