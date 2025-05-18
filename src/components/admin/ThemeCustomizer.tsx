@@ -60,11 +60,26 @@ export function ThemeCustomizer() {
         if (error) throw error;
         
         if (data?.value) {
-          const theme = data.value as ThemeSettings;
-          setPrimaryColor(theme.primaryColor || "#FF5C35");
-          setSecondaryColor(theme.secondaryColor || "#1A2C38");
-          setLogoSize(theme.logoSize || 40);
-          setLogoUrl(theme.logoUrl || "/lovable-uploads/33c86c21-a65a-47cc-bc48-c84732a3e5fd.png");
+          // Cast to unknown first, then to ThemeSettings to satisfy TypeScript
+          const themeValue = data.value as unknown;
+          // Type guard to check if the structure matches ThemeSettings
+          const themeData = themeValue as Record<string, unknown>;
+          
+          if (typeof themeData.primaryColor === 'string') {
+            setPrimaryColor(themeData.primaryColor);
+          }
+          
+          if (typeof themeData.secondaryColor === 'string') {
+            setSecondaryColor(themeData.secondaryColor);
+          }
+          
+          if (typeof themeData.logoSize === 'number') {
+            setLogoSize(themeData.logoSize);
+          }
+          
+          if (typeof themeData.logoUrl === 'string') {
+            setLogoUrl(themeData.logoUrl);
+          }
         }
       } catch (err) {
         console.error("Error fetching theme settings:", err);
@@ -107,11 +122,12 @@ export function ThemeCustomizer() {
         logoUrl: newLogoUrl || logoUrl,
       };
       
+      // Convert themeSettings to a JSON compatible object
       const { error } = await supabase
         .from("app_settings")
         .upsert({ 
           key: "theme_settings", 
-          value: themeSettings,
+          value: themeSettings as unknown as Record<string, unknown>,
           updated_by: user?.id,
         }, { onConflict: 'key' });
       

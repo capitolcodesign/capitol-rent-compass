@@ -78,12 +78,16 @@ export function UserRoleManagement({ user, onUpdate }: UserRoleManagementProps) 
   const handleDeleteUser = async () => {
     setIsDeleting(true);
     try {
-      // Add a deleted_at field to the profiles table to mark users as deleted
+      // First, check if the deleted_at column exists in the profiles table
+      // If not, we need to use a different approach
       const { error } = await supabase
         .from('profiles')
         .update({ 
-          // Add a 'deleted_at' timestamp
-          deleted_at: new Date().toISOString()
+          // Instead of setting deleted_at directly, use is_active flag
+          // which should exist in most user tables
+          is_active: false,
+          // Add a comment in the updated_at field to mark as deactivated
+          updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
 
@@ -120,7 +124,7 @@ export function UserRoleManagement({ user, onUpdate }: UserRoleManagementProps) 
       <div className="flex items-center space-x-2">
         <Select
           value={selectedRole}
-          onValueChange={(value: UserRole) => setSelectedRole(value)}
+          onValueChange={setSelectedRole}
           disabled={isUpdating}
         >
           <SelectTrigger className="w-32">

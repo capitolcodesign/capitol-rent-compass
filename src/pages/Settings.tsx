@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -126,7 +125,7 @@ const Settings: React.FC = () => {
           email: `user-${profile.id.substring(0, 8)}@example.com`, // Placeholder
           firstName: profile.first_name || '',
           lastName: profile.last_name || '',
-          role,
+          role, // Now typed correctly as UserRole
           created_at: profile.created_at
         } as UserDisplay;
       }) || [];
