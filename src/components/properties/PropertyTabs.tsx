@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
@@ -36,6 +37,11 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({ notes = [], attributes = []
   const [editingNote, setEditingNote] = useState<PropertyNote | null>(null);
   const [noteContent, setNoteContent] = useState('');
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [isAddingAttribute, setIsAddingAttribute] = useState(false);
+  const [editingAttribute, setEditingAttribute] = useState<PropertyAttribute | null>(null);
+  const [attributeKey, setAttributeKey] = useState('');
+  const [attributeValue, setAttributeValue] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -131,6 +137,162 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({ notes = [], attributes = []
     setIsAddingNote(true);
   };
 
+  const handleSaveAttribute = async () => {
+    if (!attributeKey.trim() || !attributeValue.trim()) {
+      toast({
+        title: "Error",
+        description: "Both key and value are required.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      if (editingAttribute) {
+        // Update existing attribute
+        const { error } = await supabase
+          .from('property_attributes')
+          .update({
+            key: attributeKey,
+            value: attributeValue
+          })
+          .eq('id', editingAttribute.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Attribute Updated",
+          description: "The attribute has been updated successfully."
+        });
+      } else {
+        // Add new attribute
+        const { error } = await supabase
+          .from('property_attributes')
+          .insert({
+            property_id: propertyId,
+            key: attributeKey,
+            value: attributeValue
+          });
+
+        if (error) throw error;
+
+        toast({
+          title: "Attribute Added",
+          description: "The attribute has been added successfully."
+        });
+      }
+
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ['property-attributes', propertyId] });
+      setIsAddingAttribute(false);
+      setEditingAttribute(null);
+      setAttributeKey('');
+      setAttributeValue('');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to save attribute: ${(error as Error).message}`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEditAttribute = (attr: PropertyAttribute) => {
+    setEditingAttribute(attr);
+    setAttributeKey(attr.key);
+    setAttributeValue(attr.value);
+    setIsAddingAttribute(true);
+  };
+
+  const handleDeleteAttribute = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('property_attributes')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Attribute Deleted",
+        description: "The attribute has been deleted successfully."
+      });
+
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ['property-attributes', propertyId] });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to delete attribute: ${(error as Error).message}`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    try {
+      // Create storage bucket if it doesn't exist
+      const { error: bucketError } = await supabase.storage.createBucket('property-images', {
+        public: true
+      });
+
+      if (bucketError && bucketError.message !== 'Bucket already exists') {
+        throw bucketError;
+      }
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${propertyId}/${Date.now()}.${fileExt}`;
+        const filePath = fileName;
+
+        // Upload file to storage
+        const { error: uploadError } = await supabase.storage
+          .from('property-images')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL
+        const { data: publicUrlData } = supabase.storage
+          .from('property-images')
+          .getPublicUrl(filePath);
+
+        // Add record to property_images table
+        const { error: dbError } = await supabase
+          .from('property_images')
+          .insert({
+            property_id: propertyId,
+            storage_path: filePath,
+            display_order: i,
+            caption: file.name
+          });
+
+        if (dbError) throw dbError;
+      }
+
+      toast({
+        title: "Upload Successful",
+        description: `${files.length} image(s) uploaded successfully.`
+      });
+
+      // Refresh images
+      queryClient.invalidateQueries({ queryKey: ['property-images', propertyId] });
+    } catch (error) {
+      toast({
+        title: "Upload Error",
+        description: `Failed to upload images: ${(error as Error).message}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
     <Tabs defaultValue="notes" className="mt-6">
       <TabsList>
@@ -190,7 +352,15 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({ notes = [], attributes = []
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle>Property Attributes</CardTitle>
-              <Button size="sm">Add Attribute</Button>
+              <Button size="sm" onClick={() => {
+                setIsAddingAttribute(true);
+                setEditingAttribute(null);
+                setAttributeKey('');
+                setAttributeValue('');
+              }}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Attribute
+              </Button>
             </div>
           </CardHeader>
           <CardContent>
@@ -198,8 +368,18 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({ notes = [], attributes = []
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {attributes.map((attr) => (
                   <div key={attr.id} className="flex justify-between p-3 border rounded-md">
-                    <span className="font-medium">{attr.key}</span>
-                    <span className="text-muted-foreground">{attr.value}</span>
+                    <div>
+                      <span className="font-medium">{attr.key}</span>
+                      <span className="text-muted-foreground ml-2">{attr.value}</span>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button variant="ghost" size="sm" onClick={() => handleEditAttribute(attr)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDeleteAttribute(attr.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -215,7 +395,22 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({ notes = [], attributes = []
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle>Property Images</CardTitle>
-              <Button size="sm">Upload Image</Button>
+              <Button size="sm" as="label" htmlFor="image-upload">
+                {isUploading ? 
+                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent mr-2" /> :
+                  <Plus className="mr-2 h-4 w-4" />
+                }
+                Upload Image
+                <input 
+                  id="image-upload" 
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageUpload}
+                  disabled={isUploading}
+                />
+              </Button>
             </div>
           </CardHeader>
           <CardContent>
@@ -223,9 +418,28 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({ notes = [], attributes = []
               <div className="text-center">
                 <Image className="mx-auto h-12 w-12 text-muted-foreground" />
                 <p className="mt-2 text-sm text-muted-foreground">
-                  No images have been added to this property
+                  {isUploading ? 
+                    "Uploading images..." :
+                    "Drag and drop images or click to upload"
+                }
                 </p>
-                <Button variant="outline" className="mt-4">Upload Images</Button>
+                <Button 
+                  variant="outline" 
+                  className="mt-4" 
+                  as="label" 
+                  htmlFor="image-upload-2"
+                  disabled={isUploading}
+                >
+                  Upload Images
+                  <input 
+                    id="image-upload-2" 
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                  />
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -258,6 +472,49 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({ notes = [], attributes = []
             <Button onClick={handleSaveNote}>
               <Save className="mr-2 h-4 w-4" />
               {editingNote ? 'Update' : 'Save'} Note
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add/Edit Attribute Dialog */}
+      <Dialog open={isAddingAttribute} onOpenChange={(open) => !open && setIsAddingAttribute(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingAttribute ? 'Edit' : 'Add'} Attribute</DialogTitle>
+            <DialogDescription>
+              {editingAttribute ? 'Update the attribute details.' : 'Add an attribute to this property.'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="key" className="text-sm font-medium">Key</label>
+              <Input
+                id="key"
+                value={attributeKey}
+                onChange={(e) => setAttributeKey(e.target.value)}
+                placeholder="e.g., Construction Type, Roof Material"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label htmlFor="value" className="text-sm font-medium">Value</label>
+              <Input
+                id="value"
+                value={attributeValue}
+                onChange={(e) => setAttributeValue(e.target.value)}
+                placeholder="e.g., Wood Frame, Shingle"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddingAttribute(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveAttribute}>
+              <Save className="mr-2 h-4 w-4" />
+              {editingAttribute ? 'Update' : 'Save'} Attribute
             </Button>
           </DialogFooter>
         </DialogContent>

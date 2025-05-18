@@ -64,7 +64,15 @@ const RentalAssistantChat: React.FC<RentalAssistantChatProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get response from AI assistant');
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
+      
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        // Handle non-JSON response
+        const text = await response.text();
+        console.error("Received non-JSON response:", text);
+        throw new Error("Received non-JSON response from server");
       }
 
       const data = await response.json();

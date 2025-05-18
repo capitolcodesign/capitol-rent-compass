@@ -4,16 +4,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { corsHeaders } from "../_shared/cors.ts";
 
 interface ChatMessage {
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'system';
   content: string;
 }
-
-// Create a _shared/cors.ts file if it doesn't exist
-// with the following content:
-// export const corsHeaders = {
-//   'Access-Control-Allow-Origin': '*',
-//   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-// };
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -71,9 +64,9 @@ Address: ${address}`;
     // Add additional property details if available
     if (propertyData) {
       systemPrompt += `
-Type: ${propertyData.type}
-Units: ${propertyData.units}
-Built year: ${propertyData.built_year}
+Type: ${propertyData.type || 'N/A'}
+Units: ${propertyData.units || 'N/A'}
+Built year: ${propertyData.built_year || 'N/A'}
 `;
 
       // Add amenities if available
@@ -85,7 +78,7 @@ Built year: ${propertyData.built_year}
       if (propertyData.property_custom_fields && propertyData.property_custom_fields.length > 0) {
         systemPrompt += `\nAdditional details:`;
         propertyData.property_custom_fields.forEach((field: any) => {
-          systemPrompt += `\n- ${field.field_name}: ${field.field_value}`;
+          systemPrompt += `\n- ${field.field_name}: ${field.field_value || 'N/A'}`;
         });
       }
     }
@@ -99,11 +92,21 @@ Built year: ${propertyData.built_year}
 
     // Add conversation history if available
     if (history && Array.isArray(history)) {
-      messages.push(...history);
+      messages.push(...history.map((msg: {role: string, content: string}) => ({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content
+      })));
     }
 
     // Add the current user message
     messages.push({ role: 'user', content: message });
+
+    console.log("Sending to OpenAI:", JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages,
+      temperature: 0.7,
+      max_tokens: 500,
+    }));
 
     // Call OpenAI API
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -138,7 +141,7 @@ Built year: ${propertyData.built_year}
     console.error('Error in rental assistant chat:', error);
     
     return new Response(
-      JSON.stringify({ error: `Server error: ${error.message}` }),
+      JSON.stringify({ error: `Server error: ${(error as Error).message}` }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
