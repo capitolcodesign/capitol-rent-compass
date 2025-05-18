@@ -112,6 +112,13 @@ export function UserRoleManagement({ user, onUpdate }: UserRoleManagementProps) 
     }
   };
 
+  // Type-safe handling of role selection
+  const handleSelectRole = (value: string) => {
+    if (value === 'admin' || value === 'staff' || value === 'auditor') {
+      setSelectedRole(value as UserRole);
+    }
+  };
+
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div className="flex items-center space-x-2">
@@ -124,7 +131,7 @@ export function UserRoleManagement({ user, onUpdate }: UserRoleManagementProps) 
       <div className="flex items-center space-x-2">
         <Select
           value={selectedRole}
-          onValueChange={setSelectedRole}
+          onValueChange={handleSelectRole}
           disabled={isUpdating}
         >
           <SelectTrigger className="w-32">

@@ -122,12 +122,12 @@ export function ThemeCustomizer() {
         logoUrl: newLogoUrl || logoUrl,
       };
       
-      // Convert themeSettings to a JSON compatible object
+      // Convert themeSettings to a proper JSON format that Supabase expects
       const { error } = await supabase
         .from("app_settings")
         .upsert({ 
           key: "theme_settings", 
-          value: themeSettings as unknown as Record<string, unknown>,
+          value: themeSettings as any, // Use 'any' to bypass the type checking for the Json type
           updated_by: user?.id,
         }, { onConflict: 'key' });
       
