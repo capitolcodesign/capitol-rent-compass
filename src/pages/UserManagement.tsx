@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { AddUserModal } from '@/components/users/AddUserModal';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
 
 interface UserProfile {
   id: string;
@@ -17,6 +18,7 @@ interface UserProfile {
   last_name: string | null;
   role: string | null;
   created_at: string | null;
+  email?: string | null;
 }
 
 export default function UserManagement() {
@@ -29,18 +31,56 @@ export default function UserManagement() {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      // Fetch profiles data from the profiles table
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, role, created_at')
-        .order('created_at');
+        .select('id, first_name, last_name, role, created_at');
         
-      if (error) {
-        throw error;
+      if (profilesError) {
+        throw profilesError;
       }
+
+      // Log for debugging
+      console.log("Fetched profiles:", profilesData?.length || 0);
       
-      setUsers(data || []);
+      // If we have profiles, fetch the corresponding user emails
+      if (profilesData && profilesData.length > 0) {
+        // We need to enrich the profiles with email data from auth.users
+        // We'll do this client-side since we can't directly join with auth.users
+        
+        const enrichedProfiles = await Promise.all(
+          profilesData.map(async (profile) => {
+            try {
+              // For each profile, fetch the user record from auth
+              const { data: userData, error: userError } = await supabase.auth.admin.getUserById(profile.id);
+              
+              if (userError) {
+                console.error('Error fetching user details:', userError);
+                return { ...profile, email: null };
+              }
+              
+              return { 
+                ...profile, 
+                email: userData?.user?.email || null 
+              };
+            } catch (error) {
+              console.error('Error enriching profile:', error);
+              return { ...profile, email: null };
+            }
+          })
+        );
+        
+        setUsers(enrichedProfiles);
+      } else {
+        setUsers([]);
+      }
     } catch (error) {
       console.error('Error fetching users:', error);
+      toast({
+        title: 'Error',
+        description: 'Could not fetch user data. Please try again later.',
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -61,7 +101,7 @@ export default function UserManagement() {
   const getInitials = (firstName: string | null, lastName: string | null) => {
     const first = firstName ? firstName.charAt(0) : '';
     const last = lastName ? lastName.charAt(0) : '';
-    return (first + last).toUpperCase();
+    return (first + last).toUpperCase() || 'U';
   };
   
   return (
@@ -134,8 +174,8 @@ export default function UserManagement() {
                               <AvatarFallback>{getInitials(user.first_name, user.last_name)}</AvatarFallback>
                             </Avatar>
                             <div>
-                              <div>{user.first_name} {user.last_name}</div>
-                              <div className="text-xs text-muted-foreground">ID: {user.id.slice(0, 8)}...</div>
+                              <div>{user.first_name || 'Anonymous'} {user.last_name || 'User'}</div>
+                              <div className="text-xs text-muted-foreground">{user.id.slice(0, 8)}...</div>
                             </div>
                           </div>
                         </TableCell>

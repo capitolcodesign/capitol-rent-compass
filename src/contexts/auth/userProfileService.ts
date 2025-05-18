@@ -51,6 +51,38 @@ export const fetchUserProfile = async (userId: string, session: Session | null):
     
     if (profileData) {
       console.log("Profile data from database:", profileData);
+      
+      // If profile exists but is missing data, attempt to update it from metadata
+      if (!profileData.first_name || !profileData.last_name) {
+        const { user_metadata } = session.user;
+        
+        if (user_metadata && (user_metadata.first_name || user_metadata.last_name)) {
+          try {
+            const updateData: any = {};
+            
+            if (!profileData.first_name && user_metadata.first_name) {
+              updateData.first_name = user_metadata.first_name;
+            }
+            
+            if (!profileData.last_name && user_metadata.last_name) {
+              updateData.last_name = user_metadata.last_name;
+            }
+            
+            if (Object.keys(updateData).length > 0) {
+              await supabase
+                .from('profiles')
+                .update(updateData)
+                .eq('id', userId);
+                
+              // Update local profileData
+              Object.assign(profileData, updateData);
+            }
+          } catch (updateError) {
+            console.error("Error updating profile:", updateError);
+          }
+        }
+      }
+      
       return {
         id: userId,
         email: session.user.email || '',
@@ -60,13 +92,47 @@ export const fetchUserProfile = async (userId: string, session: Session | null):
       };
     }
     
-    // If no database record, create minimal profile
-    console.log("No profile found in database, creating minimal profile");
+    // If no database record, create profile from metadata
+    console.log("No profile found in database, creating profile from metadata");
+    const { user_metadata } = session.user;
+    
+    // Create a new profile record
+    try {
+      const newProfile = {
+        id: userId,
+        first_name: user_metadata?.first_name || '',
+        last_name: user_metadata?.last_name || '',
+        role: (user_metadata?.role as string) || 'staff'
+      };
+      
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert(newProfile);
+        
+      if (insertError) {
+        console.error("Error creating new profile:", insertError);
+      } else {
+        console.log("Created new profile for user");
+      }
+      
+      // Return user object
+      return {
+        id: userId,
+        email: session.user.email || '',
+        firstName: newProfile.first_name,
+        lastName: newProfile.last_name,
+        role: newProfile.role as UserRole
+      };
+    } catch (createError) {
+      console.error("Error creating profile:", createError);
+    }
+    
+    // Return minimal profile on failure
     return {
       id: userId,
-      email: session.user.email || '',
-      firstName: '',
-      lastName: '',
+      email: session.user?.email || '',
+      firstName: user_metadata?.first_name || '',
+      lastName: user_metadata?.last_name || '',
       role: 'staff' as UserRole
     };
     

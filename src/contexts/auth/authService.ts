@@ -61,6 +61,36 @@ export const signUp = async (email: string, password: string, firstName: string,
       throw error;
     }
     
+    // Manually ensure profile exists after signup
+    if (data.user) {
+      try {
+        // Check if profile already exists
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', data.user.id)
+          .single();
+          
+        if (!existingProfile) {
+          // Create profile if it doesn't exist
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              first_name: firstName,
+              last_name: lastName,
+              role: 'staff'
+            });
+            
+          if (profileError) {
+            console.error('Error creating profile:', profileError);
+          }
+        }
+      } catch (profileErr) {
+        console.error('Profile check/creation error:', profileErr);
+      }
+    }
+    
     // Show success message
     toast({
       title: 'Sign Up Successful',
@@ -88,7 +118,7 @@ export const adminCreateUser = async (
   role: string
 ): Promise<any> => {
   try {
-    // Use the regular signup method instead of admin.createUser
+    // Use the regular signup method since we don't have admin access
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -108,6 +138,27 @@ export const adminCreateUser = async (
         variant: 'destructive',
       });
       throw error;
+    }
+
+    // Manually create profile after user creation
+    if (data.user) {
+      try {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            first_name: firstName,
+            last_name: lastName,
+            role
+          });
+          
+        if (profileError) {
+          console.error('Error creating profile:', profileError);
+          throw profileError;
+        }
+      } catch (profileErr) {
+        console.error('Profile creation error:', profileErr);
+      }
     }
 
     toast({
