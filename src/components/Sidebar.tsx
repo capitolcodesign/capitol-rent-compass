@@ -14,6 +14,7 @@ import {
   ChevronRight,
   LogOut,
   ShieldCheck,
+  Scale,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -40,6 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
     { name: 'Dashboard', path: '/dashboard', icon: Home, roles: ['admin', 'staff', 'auditor'] },
     { name: 'Property Database', path: '/properties', icon: Building2, roles: ['admin', 'staff', 'auditor'] },
     { name: 'Rent Analysis', path: '/analysis', icon: BarChart3, roles: ['admin', 'staff', 'auditor'] },
+    { name: 'Rental Fairness', path: '/rental-fairness', icon: Scale, roles: ['admin', 'staff', 'auditor'] },
     { name: 'Reports', path: '/reports', icon: FileText, roles: ['admin', 'staff', 'auditor'] },
     { name: 'Users', path: '/users', icon: Users, roles: ['admin'] },
     { name: 'Settings', path: '/settings', icon: Settings, roles: ['admin'] },
