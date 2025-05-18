@@ -43,6 +43,7 @@ export type Database = {
           created_at: string | null
           id: string
           last_analysis: string | null
+          name: string
           property_id: string
           type: string
           units: number
@@ -55,6 +56,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           last_analysis?: string | null
+          name?: string
           property_id: string
           type: string
           units: number
@@ -67,11 +69,168 @@ export type Database = {
           created_at?: string | null
           id?: string
           last_analysis?: string | null
+          name?: string
           property_id?: string
           type?: string
           units?: number
           user_id?: string | null
           zip?: string
+        }
+        Relationships: []
+      }
+      property_attributes: {
+        Row: {
+          created_at: string | null
+          id: string
+          key: string
+          property_id: string | null
+          value: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          key: string
+          property_id?: string | null
+          value: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          key?: string
+          property_id?: string | null
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_attributes_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_images: {
+        Row: {
+          caption: string | null
+          created_at: string | null
+          display_order: number | null
+          id: string
+          is_featured: boolean | null
+          property_id: string | null
+          storage_path: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_featured?: boolean | null
+          property_id?: string | null
+          storage_path: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_featured?: boolean | null
+          property_id?: string | null
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_images_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_notes: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          property_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          property_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          property_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_notes_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_tag_relations: {
+        Row: {
+          id: string
+          property_id: string | null
+          tag_id: string | null
+        }
+        Insert: {
+          id?: string
+          property_id?: string | null
+          tag_id?: string | null
+        }
+        Update: {
+          id?: string
+          property_id?: string | null
+          tag_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_tag_relations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_tag_relations_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "property_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_tags: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
         }
         Relationships: []
       }
