@@ -61,35 +61,7 @@ export const signUp = async (email: string, password: string, firstName: string,
       throw error;
     }
     
-    // Manually ensure profile exists after signup
-    if (data.user) {
-      try {
-        // Check if profile already exists
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', data.user.id)
-          .single();
-          
-        if (!existingProfile) {
-          // Create profile if it doesn't exist
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              id: data.user.id,
-              first_name: firstName,
-              last_name: lastName,
-              role: 'staff'
-            });
-            
-          if (profileError) {
-            console.error('Error creating profile:', profileError);
-          }
-        }
-      } catch (profileErr) {
-        console.error('Profile check/creation error:', profileErr);
-      }
-    }
+    // Profile creation is now handled by database trigger via the SQL migration
     
     // Show success message
     toast({
@@ -143,41 +115,12 @@ export const adminCreateUser = async (
       throw error;
     }
 
-    console.log("Auth signup successful, creating profile...");
+    console.log("Auth signup successful");
 
-    // Directly create a profile entry
-    if (data?.user) {
-      const profileData = {
-        id: data.user.id,
-        first_name: firstName,
-        last_name: lastName,
-        role: role
-      };
-      
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert(profileData, { 
-          onConflict: 'id',
-          ignoreDuplicates: false
-        });
-        
-      if (profileError) {
-        console.error('Error creating/updating profile:', profileError);
-        toast({
-          title: 'Profile Creation Error',
-          description: 'User was created but profile setup failed. Please try again.',
-          variant: 'destructive',
-        });
-      } else {
-        console.log("Profile created successfully for:", email);
-        toast({
-          title: 'User Created',
-          description: `Successfully added user: ${email}`,
-        });
-      }
-    } else {
-      throw new Error('User data not returned from signup');
-    }
+    toast({
+      title: 'User Created',
+      description: `Successfully added user: ${email}`,
+    });
 
     return data;
   } catch (error: any) {
