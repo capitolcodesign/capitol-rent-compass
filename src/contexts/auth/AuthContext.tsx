@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
-import { User, AuthContextType } from './types';
+import { User, AuthContextType, AuthResponse } from './types';
 import { fetchUserProfile } from './userProfileService';
 import { login as authLogin, signUp as authSignUp, logout as authLogout } from './authService';
 import { checkOperationalHours as checkHours } from './operationalHoursService';
@@ -93,12 +93,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
   
   // Login function wrapper
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<AuthResponse> => {
     setIsLoading(true);
     try {
       const result = await authLogin(email, password);
       console.log("Login result:", result);
-      return result; // This now matches our updated type definition
+      return result;
     } finally {
       // Don't set loading to false here
       // It will be handled by the auth state change listener
@@ -106,11 +106,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
   
   // Sign up function wrapper
-  const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
+  const signUp = async (email: string, password: string, firstName: string, lastName: string): Promise<AuthResponse> => {
     setIsLoading(true);
     try {
       const result = await authSignUp(email, password, firstName, lastName);
-      return result; // This now matches our updated type definition
+      return result;
     } finally {
       setIsLoading(false);
     }

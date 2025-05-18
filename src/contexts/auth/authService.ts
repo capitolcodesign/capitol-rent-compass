@@ -1,9 +1,10 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { AuthResponse } from './types';
 
 // Login function using Supabase Auth
-export const login = async (email: string, password: string) => {
+export const login = async (email: string, password: string): Promise<AuthResponse> => {
   try {
     console.log("Attempting login for:", email);
     const { data, error } = await supabase.auth.signInWithPassword({ 
@@ -29,7 +30,7 @@ export const login = async (email: string, password: string) => {
       });
     }
     
-    return data; // Return data object that contains user and session
+    return data;
   } catch (error) {
     console.error('Login error:', error);
     throw error;
@@ -37,7 +38,7 @@ export const login = async (email: string, password: string) => {
 };
 
 // Sign up function using Supabase Auth
-export const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
+export const signUp = async (email: string, password: string, firstName: string, lastName: string): Promise<AuthResponse> => {
   try {
     // Include the first name and last name in the user metadata
     const { data, error } = await supabase.auth.signUp({ 
@@ -66,7 +67,7 @@ export const signUp = async (email: string, password: string, firstName: string,
       description: 'Your account has been created. Please login to continue.',
     });
     
-    return data; // Return data object that contains user and session
+    return data;
   } catch (error: any) {
     console.error('Sign up error:', error);
     toast({
