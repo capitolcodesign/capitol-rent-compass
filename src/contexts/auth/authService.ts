@@ -79,6 +79,37 @@ export const signUp = async (email: string, password: string, firstName: string,
   }
 };
 
+// Admin create user function
+export const adminCreateUser = async (
+  email: string, 
+  password: string, 
+  firstName: string, 
+  lastName: string, 
+  role: string
+): Promise<any> => {
+  try {
+    const { data, error } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        first_name: firstName,
+        last_name: lastName,
+        role,
+      },
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Admin create user error:', error);
+    throw error;
+  }
+};
+
 // Logout function
 export const logout = async () => {
   try {

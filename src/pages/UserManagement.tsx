@@ -1,13 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, Search, Filter, User, Mail, MoreHorizontal } from 'lucide-react';
+import { UserPlus, Search, Filter, MoreHorizontal } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { AddUserModal } from '@/components/users/AddUserModal';
 import { supabase } from '@/integrations/supabase/client';
 
 interface UserProfile {
@@ -23,6 +24,7 @@ export default function UserManagement() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   
   const fetchUsers = async () => {
     setIsLoading(true);
@@ -72,7 +74,7 @@ export default function UserManagement() {
           </p>
         </div>
         <div className="mt-4 md:mt-0">
-          <Button>
+          <Button onClick={() => setIsAddUserModalOpen(true)}>
             <UserPlus className="mr-2 h-4 w-4" />
             Add User
           </Button>
@@ -169,6 +171,13 @@ export default function UserManagement() {
           )}
         </CardContent>
       </Card>
+
+      {/* Add User Modal */}
+      <AddUserModal 
+        open={isAddUserModalOpen}
+        onOpenChange={setIsAddUserModalOpen}
+        onSuccess={fetchUsers}
+      />
     </div>
   );
 }
