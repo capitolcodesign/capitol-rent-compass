@@ -88,24 +88,41 @@ export const adminCreateUser = async (
   role: string
 ): Promise<any> => {
   try {
-    const { data, error } = await supabase.auth.admin.createUser({
+    // Use the regular signup method instead of admin.createUser
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      email_confirm: true,
-      user_metadata: {
-        first_name: firstName,
-        last_name: lastName,
-        role,
-      },
+      options: {
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+          role
+        }
+      }
     });
 
     if (error) {
+      toast({
+        title: 'User Creation Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
       throw error;
     }
 
+    toast({
+      title: 'User Created',
+      description: `Successfully added user: ${email}`,
+    });
+
     return data;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Admin create user error:', error);
+    toast({
+      title: 'User Creation Error',
+      description: error.message || 'An unexpected error occurred',
+      variant: 'destructive',
+    });
     throw error;
   }
 };

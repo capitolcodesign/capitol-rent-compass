@@ -31,7 +31,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { adminCreateUser } from '@/contexts/auth/authService';
 
 interface AddUserModalProps {
   open: boolean;
@@ -68,27 +68,15 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
   const onSubmit = async (data: UserFormValues) => {
     setIsSubmitting(true);
     try {
-      // Create user in Supabase Auth
-      const { error } = await supabase.auth.admin.createUser({
-        email: data.email,
-        password: data.password,
-        email_confirm: true,
-        user_metadata: {
-          first_name: data.firstName,
-          last_name: data.lastName,
-          role: data.role,
-        },
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      toast({
-        title: 'User created',
-        description: `Successfully added ${data.firstName} ${data.lastName}`,
-      });
-
+      // Use the adminCreateUser function from our auth service
+      await adminCreateUser(
+        data.email,
+        data.password,
+        data.firstName,
+        data.lastName,
+        data.role
+      );
+      
       form.reset();
       if (onSuccess) {
         onSuccess();
@@ -96,23 +84,6 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
       onOpenChange(false);
     } catch (error: any) {
       console.error('Error creating user:', error);
-      
-      // Check for specific error types
-      const errorMessage = error.message || 'Failed to create user';
-      
-      if (error.message?.includes('already registered')) {
-        toast({
-          title: 'User already exists',
-          description: 'A user with this email already exists',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Error',
-          description: errorMessage,
-          variant: 'destructive',
-        });
-      }
     } finally {
       setIsSubmitting(false);
     }
