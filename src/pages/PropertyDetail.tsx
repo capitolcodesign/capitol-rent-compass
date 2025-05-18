@@ -12,11 +12,13 @@ import PropertyInformation from '@/components/properties/PropertyInformation';
 import PropertySummary from '@/components/properties/PropertySummary';
 import PropertyReports from '@/components/properties/PropertyReports';
 import PropertyAmenitiesTags from '@/components/properties/PropertyAmenitiesTags';
+import PropertyCategoryTags from '@/components/properties/PropertyCategoryTags';
 import PropertyTabs from '@/components/properties/PropertyTabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ChevronLeft } from 'lucide-react';
 import FairnessCalculator from '@/components/rental-fairness/FairnessCalculator';
 import RentalAssistantChat from '@/components/rental-fairness/RentalAssistantChat';
+import { usePropertyCategories } from '@/components/properties/hooks/usePropertyCategories';
 
 interface PropertyDetail {
   id: string;
@@ -115,6 +117,9 @@ const PropertyDetail = () => {
       return data as PropertyDetail;
     },
   });
+
+  // Fetch property categories
+  const { categories } = usePropertyCategories(property?.id || '');
 
   // Fetch property attributes
   const { data: attributes } = useQuery({
@@ -298,6 +303,14 @@ const PropertyDetail = () => {
         onFairnessClick={() => setIsFairnessDialogOpen(true)}
         onGptAssistantClick={() => setIsGptDialogOpen(true)}
       />
+      
+      {/* Property Categories */}
+      <div className="mb-6">
+        <PropertyCategoryTags 
+          categories={categories || []} 
+          className="mb-4"
+        />
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2">

@@ -8,6 +8,7 @@ import PropertyImageUpload from './PropertyImageUpload';
 import PropertyImageGallery from './PropertyImageGallery';
 import PropertyAmenitiesSelect from './PropertyAmenitiesSelect';
 import PropertyTagsSelect from './PropertyTagsSelect';
+import PropertyCategoriesSelect from './PropertyCategoriesSelect';
 import PropertyCustomFields from './PropertyCustomFields';
 
 interface PropertyFormData {
@@ -36,10 +37,11 @@ const PropertyFormFields: React.FC<PropertyFormFieldsProps> = ({
 }) => {
   return (
     <Tabs defaultValue="basic" className="space-y-6">
-      <TabsList className="grid grid-cols-2 md:grid-cols-5 mb-4">
+      <TabsList className="grid grid-cols-2 md:grid-cols-6 mb-4">
         <TabsTrigger value="basic" className="text-sm">Basic Info</TabsTrigger>
         {!isNew && (
           <>
+            <TabsTrigger value="categories" className="text-sm">Categories</TabsTrigger>
             <TabsTrigger value="images" className="text-sm">Images</TabsTrigger>
             <TabsTrigger value="amenities" className="text-sm">Amenities</TabsTrigger>
             <TabsTrigger value="tags" className="text-sm">Tags</TabsTrigger>
@@ -120,6 +122,16 @@ const PropertyFormFields: React.FC<PropertyFormFieldsProps> = ({
       
       {!isNew && propertyData.id && (
         <>
+          <TabsContent value="categories" className="space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium">Property Categories</h3>
+              <p className="text-sm text-muted-foreground">
+                Categorize this property by assigning it to one or more categories.
+              </p>
+              <PropertyCategoriesSelect propertyId={propertyData.id} />
+            </div>
+          </TabsContent>
+          
           <TabsContent value="images" className="space-y-6">
             <div className="space-y-6">
               <div className="space-y-2">
