@@ -1,197 +1,147 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import "https://deno.land/x/xhr@0.1.0/mod.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { corsHeaders } from "../_shared/cors.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
 }
 
-interface FairnessEvalRequest {
-  propertyDetails: {
-    rent: number;
-    squareFeet: number;
-    bedrooms: number;
-    bathrooms: number;
-    location: string;
-    locationDetails?: {
-      street: string;
-      city: string;
-      state: string;
-      zip: string;
-      lat: number;
-      lng: number;
-    };
-    amenities: string[];
-    condition: string;
-  };
-  metrics: {
-    locationImportance: number;
-    conditionImportance: number;
-    sizeImportance: number;
-    amenitiesImportance: number;
-    marketRateImportance: number;
-  };
-  marketData?: {
-    averageRent: number;
-    comparableProperties?: Array<{
-      rent: number;
-      squareFeet: number;
-      bedrooms: number;
-      bathrooms: number;
-      distance?: number;
-      address?: string;
-    }>;
-  };
-}
-
-interface EvaluationResult {
-  fairnessScore: number;
-  analysis: string;
-  recommendations: string[] | string;
-  fairPriceRange: {
-    min: number;
-    max: number;
-  };
-  summary: string;
-}
+// Create a _shared/cors.ts file if it doesn't exist
+// with the following content:
+// export const corsHeaders = {
+//   'Access-Control-Allow-Origin': '*',
+//   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+// };
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders });
+  }
+
+  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+  if (!openAIApiKey) {
+    return new Response(
+      JSON.stringify({ error: 'OpenAI API key not found' }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
   }
 
   try {
-    const { propertyDetails, metrics, marketData }: FairnessEvalRequest = await req.json();
+    // Parse request payload
+    const { message, propertyId, propertyName, address, history } = await req.json();
 
-    // Check for required API key
-    const openAiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAiApiKey) {
+    if (!message || !propertyId) {
       return new Response(
-        JSON.stringify({ 
-          error: "OpenAI API key is not configured. Please add it to your project settings." 
-        }),
+        JSON.stringify({ error: 'Missing required parameters: message or propertyId' }),
         { 
-          status: 400, 
-          headers: { "Content-Type": "application/json", ...corsHeaders } 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
 
-    // Enhanced location data
-    const locationDetails = propertyDetails.locationDetails || {
-      street: '',
-      city: '',
-      state: '',
-      zip: '',
-      lat: 0,
-      lng: 0
-    };
+    // Create Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    // Structure the prompt for the AI with enhanced location data
-    const prompt = `
-      I want you to act as a rental property fairness evaluator. I will provide details about a rental property and you'll evaluate if the rent is fair based on the following metrics:
-      
-      PROPERTY DETAILS:
-      - Monthly Rent: $${propertyDetails.rent}
-      - Square Footage: ${propertyDetails.squareFeet} sq ft
-      - Bedrooms: ${propertyDetails.bedrooms}
-      - Bathrooms: ${propertyDetails.bathrooms}
-      - Address: ${propertyDetails.location}
-      - Location Details:
-        * Street: ${locationDetails.street}
-        * City: ${locationDetails.city}
-        * State: ${locationDetails.state}
-        * Zip: ${locationDetails.zip}
-        * Coordinates: ${locationDetails.lat}, ${locationDetails.lng}
-      - Amenities: ${propertyDetails.amenities.join(", ")}
-      - Property Condition: ${propertyDetails.condition}
-      
-      EVALUATION METRICS (Importance scale 1-10):
-      - Location Value: ${metrics.locationImportance}/10
-      - Property Condition: ${metrics.conditionImportance}/10
-      - Size and Layout: ${metrics.sizeImportance}/10
-      - Amenities: ${metrics.amenitiesImportance}/10
-      - Market Rate Comparison: ${metrics.marketRateImportance}/10
-      
-      ${marketData ? `
-      MARKET DATA:
-      - Average Rent in Area: $${marketData.averageRent}
-      ${marketData.comparableProperties && marketData.comparableProperties.length > 0 ? `
-      - Comparable Properties:
-        ${marketData.comparableProperties.map((prop, i) => 
-          `  ${i+1}. $${prop.rent}/month, ${prop.squareFeet} sq ft, ${prop.bedrooms}bd/${prop.bathrooms}ba${prop.distance ? `, ${prop.distance} miles away` : ''}${prop.address ? `, at ${prop.address}` : ''}`
-        ).join('\n')}
-      ` : ''}
-      ` : ''}
-      
-      Please provide:
-      1. A fairness score from 1-100 (where 100 is perfectly fair)
-      2. A detailed analysis based on the above metrics
-      3. Recommendations to make the rent more fair if needed (provide as an array of strings)
-      4. A price range that would be considered fair for this property
-      
-      Format your response as a JSON object with these keys: fairnessScore, analysis, recommendations (as an array of strings), fairPriceRange (with min and max values), and a summary.
-    `;
+    // Fetch additional property details
+    const { data: propertyData, error: propertyError } = await supabase
+      .from('properties')
+      .select('*, property_amenities(*), property_notes(*), property_custom_fields(*)')
+      .eq('id', propertyId)
+      .single();
 
-    // Make API call to OpenAI
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
+    if (propertyError) {
+      console.error("Error fetching property details:", propertyError);
+    }
+
+    // Prepare the system prompt with property information
+    let systemPrompt = `You are a helpful real estate assistant specializing in rental properties. You're currently discussing a property with the following details:
+    
+Name: ${propertyName}
+Address: ${address}`;
+
+    // Add additional property details if available
+    if (propertyData) {
+      systemPrompt += `
+Type: ${propertyData.type}
+Units: ${propertyData.units}
+Built year: ${propertyData.built_year}
+`;
+
+      // Add amenities if available
+      if (propertyData.property_amenities && propertyData.property_amenities.length > 0) {
+        systemPrompt += `\nAmenities: ${propertyData.property_amenities.map((a: any) => a.name).join(', ')}`;
+      }
+
+      // Add custom fields if available
+      if (propertyData.property_custom_fields && propertyData.property_custom_fields.length > 0) {
+        systemPrompt += `\nAdditional details:`;
+        propertyData.property_custom_fields.forEach((field: any) => {
+          systemPrompt += `\n- ${field.field_name}: ${field.field_value}`;
+        });
+      }
+    }
+
+    systemPrompt += `\n\nProvide helpful, accurate, and concise information about this property. Answer questions based on the property details provided. If asked about information you don't have, politely explain that you don't have that specific detail.`;
+
+    // Prepare conversation history
+    const messages: ChatMessage[] = [
+      { role: 'system', content: systemPrompt },
+    ];
+
+    // Add conversation history if available
+    if (history && Array.isArray(history)) {
+      messages.push(...history);
+    }
+
+    // Add the current user message
+    messages.push({ role: 'user', content: message });
+
+    // Call OpenAI API
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
       headers: {
-        Authorization: `Bearer ${openAiApiKey}`,
-        "Content-Type": "application/json",
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini", // Using a capable model for analysis
-        messages: [
-          { role: "system", content: "You are a rental property fairness evaluation assistant that helps determine if rental prices are fair based on provided metrics and market data. You always respond in valid JSON format." },
-          { role: "user", content: prompt }
-        ],
-        temperature: 0.5,
+        model: 'gpt-4o-mini',
+        messages,
+        temperature: 0.7,
+        max_tokens: 500,
       }),
     });
 
-    const openAiResponse = await response.json();
-    let aiOutput = openAiResponse.choices[0].message.content;
-    
-    // Try to parse JSON from the response
-    try {
-      // Find the JSON object in the response
-      const jsonMatch = aiOutput.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        aiOutput = jsonMatch[0];
-      }
-      
-      const parsedOutput = JSON.parse(aiOutput) as EvaluationResult;
-      
-      // Ensure recommendations is an array
-      if (typeof parsedOutput.recommendations === 'string') {
-        parsedOutput.recommendations = [parsedOutput.recommendations];
-      }
-      
-      return new Response(JSON.stringify(parsedOutput), {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
-    } catch (parseError) {
-      // If JSON parsing fails, return the original text
-      console.error("Error parsing JSON from AI response:", parseError);
-      return new Response(JSON.stringify({ 
-        error: "Failed to parse structured data",
-        rawResponse: aiOutput 
-      }), {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
+    if (!openAIResponse.ok) {
+      const errorData = await openAIResponse.json();
+      throw new Error(`OpenAI API error: ${JSON.stringify(errorData)}`);
     }
-  } catch (error) {
-    console.error("Error:", error.message);
+
+    const aiData = await openAIResponse.json();
+    const aiReply = aiData.choices[0].message.content;
+
+    // Return the response
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
+      JSON.stringify({ response: aiReply }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('Error in rental assistant chat:', error);
+    
+    return new Response(
+      JSON.stringify({ error: `Server error: ${error.message}` }),
+      { 
         status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
   }

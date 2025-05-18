@@ -1,19 +1,23 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Trash2, PencilLine } from 'lucide-react';
+import { ArrowLeft, Trash2, PencilLine, BarChart4, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface PropertyDetailHeaderProps {
   propertyName: string;
   onDeleteClick?: () => void;
   onEditClick?: () => void;
+  onFairnessClick?: () => void;
+  onGptAssistantClick?: () => void;
 }
 
 const PropertyDetailHeader: React.FC<PropertyDetailHeaderProps> = ({ 
   propertyName, 
   onDeleteClick,
-  onEditClick
+  onEditClick,
+  onFairnessClick,
+  onGptAssistantClick
 }) => {
   const navigate = useNavigate();
   
@@ -27,7 +31,21 @@ const PropertyDetailHeader: React.FC<PropertyDetailHeaderProps> = ({
         <h1 className="text-2xl font-bold">{propertyName}</h1>
       </div>
       
-      <div className="flex space-x-2">
+      <div className="flex flex-wrap gap-2">
+        {onFairnessClick && (
+          <Button variant="outline" onClick={onFairnessClick}>
+            <BarChart4 className="mr-2 h-4 w-4" />
+            Fairness Calculator
+          </Button>
+        )}
+        
+        {onGptAssistantClick && (
+          <Button variant="outline" onClick={onGptAssistantClick}>
+            <MessageSquare className="mr-2 h-4 w-4" />
+            AI Assistant
+          </Button>
+        )}
+        
         {onEditClick && (
           <Button variant="outline" onClick={onEditClick}>
             <PencilLine className="mr-2 h-4 w-4" />

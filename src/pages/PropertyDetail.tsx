@@ -13,7 +13,9 @@ import PropertyInformation from '@/components/properties/PropertyInformation';
 import PropertySummary from '@/components/properties/PropertySummary';
 import PropertyReports from '@/components/properties/PropertyReports';
 import PropertyTabs from '@/components/properties/PropertyTabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ChevronLeft } from 'lucide-react';
+import FairnessCalculator from '@/components/rental-fairness/FairnessCalculator';
 
 interface PropertyDetail {
   id: string;
@@ -73,6 +75,8 @@ const PropertyDetail = () => {
   
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isFairnessDialogOpen, setIsFairnessDialogOpen] = useState(false);
+  const [isGptDialogOpen, setIsGptDialogOpen] = useState(false);
 
   // Fetch property details
   const { data: property, isLoading, error } = useQuery({
@@ -279,6 +283,8 @@ const PropertyDetail = () => {
         propertyName={property.name}
         onDeleteClick={() => setIsDeleteDialogOpen(true)}
         onEditClick={() => navigate(`/properties/edit/${property.property_id}`)}
+        onFairnessClick={() => setIsFairnessDialogOpen(true)}
+        onGptAssistantClick={() => setIsGptDialogOpen(true)}
       />
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -292,7 +298,7 @@ const PropertyDetail = () => {
           />
 
           {/* Property Tabs: Notes, Attributes, Images */}
-          <PropertyTabs notes={notes} attributes={attributes} />
+          <PropertyTabs notes={notes} attributes={attributes} propertyId={property.id} />
         </div>
         
         <div>
@@ -315,6 +321,47 @@ const PropertyDetail = () => {
         variant="destructive"
         loading={isDeleting}
       />
+
+      {/* Fairness Calculator Dialog */}
+      <Dialog open={isFairnessDialogOpen} onOpenChange={setIsFairnessDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Rental Fairness Calculator - {property.name}</DialogTitle>
+          </DialogHeader>
+          <FairnessCalculator 
+            propertyDetails={{
+              location: property.address,
+              locationDetails: {
+                street: property.street || '',
+                city: property.city || '',
+                state: property.state || '',
+                zip: property.zip,
+                lat: property.latitude || 0,
+                lng: property.longitude || 0
+              },
+              // These values need to be set by the user in the calculator
+              rent: 0,
+              squareFeet: 0,
+              bedrooms: 0,
+              bathrooms: 0,
+              amenities: [],
+              condition: ''
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* GPT Assistant Dialog */}
+      <Dialog open={isGptDialogOpen} onOpenChange={setIsGptDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Property Assistant - {property.name}</DialogTitle>
+          </DialogHeader>
+          <div className="p-4">
+            <RentalAssistantChat propertyId={property.id} propertyName={property.name} address={property.address} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

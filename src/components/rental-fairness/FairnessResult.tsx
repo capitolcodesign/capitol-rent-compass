@@ -50,10 +50,13 @@ const FairnessResult: React.FC<FairnessResultProps> = ({ result, isLoading }) =>
     ? result.recommendations 
     : [result.recommendations];
 
-  // Handle analysis text properly whether it's a string or not
+  // Handle analysis text properly whether it's a string or array
   const analysisText = typeof result.analysis === 'string' 
     ? result.analysis 
     : JSON.stringify(result.analysis);
+
+  // Get analysis paragraphs safely
+  const analysisParagraphs = analysisText.split('\n').filter(Boolean);
 
   return (
     <Card>
@@ -96,7 +99,7 @@ const FairnessResult: React.FC<FairnessResultProps> = ({ result, isLoading }) =>
             <div>
               <h3 className="font-medium text-lg mb-2">Analysis</h3>
               <div className="text-sm space-y-2">
-                {analysisText.split('\n').map((paragraph, index) => (
+                {analysisParagraphs.map((paragraph, index) => (
                   <p key={index}>{paragraph}</p>
                 ))}
               </div>
