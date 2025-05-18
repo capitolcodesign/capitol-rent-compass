@@ -395,22 +395,24 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({ notes = [], attributes = []
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle>Property Images</CardTitle>
-              <Button size="sm" as="label" htmlFor="image-upload">
-                {isUploading ? 
-                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent mr-2" /> :
-                  <Plus className="mr-2 h-4 w-4" />
-                }
-                Upload Image
+              <div className="relative">
+                <Button size="sm">
+                  {isUploading ? 
+                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent mr-2" /> :
+                    <Plus className="mr-2 h-4 w-4" />
+                  }
+                  Upload Image
+                </Button>
                 <input 
                   id="image-upload" 
                   type="file"
-                  className="hidden"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   accept="image/*"
                   multiple
                   onChange={handleImageUpload}
                   disabled={isUploading}
                 />
-              </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -421,25 +423,26 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({ notes = [], attributes = []
                   {isUploading ? 
                     "Uploading images..." :
                     "Drag and drop images or click to upload"
-                }
+                  }
                 </p>
-                <Button 
-                  variant="outline" 
-                  className="mt-4" 
-                  as="label" 
-                  htmlFor="image-upload-2"
-                  disabled={isUploading}
-                >
-                  Upload Images
+                <div className="mt-4 relative">
+                  <Button 
+                    variant="outline" 
+                    className="mt-4"
+                    disabled={isUploading}
+                  >
+                    Upload Images
+                  </Button>
                   <input 
                     id="image-upload-2" 
                     type="file"
-                    className="hidden"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     accept="image/*"
                     multiple
                     onChange={handleImageUpload}
+                    disabled={isUploading}
                   />
-                </Button>
+                </div>
               </div>
             </div>
           </CardContent>

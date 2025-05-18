@@ -160,7 +160,7 @@ const FairnessCalculator: React.FC<FairnessCalculatorProps> = ({ propertyDetails
         <TabsContent value="details" className="space-y-4">
           <PropertyDetailsForm 
             propertyDetails={details} 
-            onPropertyDetailsChange={setDetails} 
+            setPropertyDetails={setDetails} 
           />
           <div className="flex justify-end mt-6">
             <Button onClick={() => handleNext('details')}>
@@ -191,8 +191,7 @@ const FairnessCalculator: React.FC<FairnessCalculatorProps> = ({ propertyDetails
             propertyDetails={{
               bedrooms: details.bedrooms,
               bathrooms: details.bathrooms,
-              squareFeet: details.squareFeet,
-              location: details.location
+              squareFeet: details.squareFeet
             }}
           />
           <div className="flex justify-end space-x-2 mt-6">

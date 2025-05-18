@@ -48,7 +48,7 @@ const RentalAssistantChat: React.FC<RentalAssistantChatProps> = ({
     setIsLoading(true);
 
     try {
-      // Call to backend API or Edge Function
+      // Call to backend API or Edge Function using the correct URL
       const response = await fetch('/api/rental-fairness-gpt', {
         method: 'POST',
         headers: {
@@ -64,9 +64,12 @@ const RentalAssistantChat: React.FC<RentalAssistantChatProps> = ({
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error response:', errorText);
         throw new Error(`Server responded with status: ${response.status}`);
       }
       
+      // Check content type and handle appropriately
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
         // Handle non-JSON response
