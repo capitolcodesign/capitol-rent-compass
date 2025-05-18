@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
@@ -56,6 +55,7 @@ const Login: React.FC = () => {
   // This effect runs whenever isAuthenticated or session changes
   useEffect(() => {
     // If user is authenticated, redirect to dashboard
+    console.log("Login component: Auth state check:", { isAuthenticated, session });
     if (isAuthenticated && session) {
       console.log("User authenticated, redirecting to dashboard");
       navigate('/', { replace: true });
@@ -83,7 +83,7 @@ const Login: React.FC = () => {
   };
   
   // Add console log to debug authentication state
-  console.log("Auth state:", { isAuthenticated, session, user: session?.user });
+  console.log("Auth state in Login component:", { isAuthenticated, hasSession: !!session });
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-capitol-cream p-4">

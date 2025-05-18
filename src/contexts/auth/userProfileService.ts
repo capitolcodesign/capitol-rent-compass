@@ -7,41 +7,40 @@ import { User, UserRole } from './types';
 export const fetchUserProfile = async (userId: string, session: Session | null): Promise<User | null> => {
   try {
     console.log("Fetching profile for user:", userId);
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
     
-    if (error) {
-      console.error('Profile fetch error:', error);
+    // Skip database fetch if no session is available
+    if (!session?.user) {
+      console.log("No session available, skipping profile fetch");
       return null;
     }
     
-    if (profile) {
-      console.log("Profile fetched successfully:", profile);
+    // Extract user metadata from session directly
+    const { user_metadata } = session.user;
+    
+    if (user_metadata) {
+      console.log("Using user metadata from session:", user_metadata);
+      // Create user from session metadata without database query
+      // This avoids the recursive RLS policy issue
       return {
         id: userId,
-        email: session?.user?.email || '',
-        firstName: profile.first_name || '',
-        lastName: profile.last_name || '',
-        role: (profile.role as UserRole) || 'staff'
+        email: session.user.email || '',
+        firstName: user_metadata.first_name || '',
+        lastName: user_metadata.last_name || '',
+        // Cast role to UserRole type to satisfy TypeScript
+        role: (user_metadata.role as UserRole) || 'staff'
       };
     }
     
-    // If no profile exists yet but we have a user, create a minimal profile
-    if (userId && session?.user) {
-      console.log("Creating minimal profile for user:", userId);
-      return {
-        id: userId,
-        email: session?.user?.email || '',
-        firstName: session?.user?.user_metadata?.first_name || '',
-        lastName: session?.user?.user_metadata?.last_name || '',
-        role: 'staff' as UserRole
-      };
-    }
+    // If no metadata available, create minimal profile
+    console.log("No metadata available, creating minimal profile");
+    return {
+      id: userId,
+      email: session.user.email || '',
+      firstName: '',
+      lastName: '',
+      role: 'staff' as UserRole
+    };
     
-    return null;
   } catch (error) {
     console.error('Error fetching user profile:', error);
     return null;
