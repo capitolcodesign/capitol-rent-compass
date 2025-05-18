@@ -1,14 +1,11 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import Logo from '@/components/Logo';
 import FooterSection from '@/components/landing/FooterSection';
-
 const About: React.FC = () => {
-  return (
-    <div className="min-h-screen bg-white">
+  return <div className="min-h-screen bg-white">
       {/* Navigation */}
       <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
@@ -20,10 +17,7 @@ const About: React.FC = () => {
             <Link to="/contact" className="text-element-charcoal hover:text-element-orange transition-colors">Contact</Link>
           </div>
           <div className="flex items-center space-x-4">
-            <Link 
-              to="/login" 
-              className="text-element-charcoal hover:text-element-orange transition-colors hidden md:block"
-            >
+            <Link to="/login" className="text-element-charcoal hover:text-element-orange transition-colors hidden md:block">
               Log in
             </Link>
             <Link to="/login?tab=signup">
@@ -66,11 +60,7 @@ const About: React.FC = () => {
               <div className="md:w-1/2">
                 <div className="relative">
                   <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-200">
-                    <img 
-                      src="/lovable-uploads/33c86c21-a65a-47cc-bc48-c84732a3e5fd.png" 
-                      alt="SHRA Logo" 
-                      className="w-full h-auto rounded-lg"
-                    />
+                    <img src="/lovable-uploads/33c86c21-a65a-47cc-bc48-c84732a3e5fd.png" alt="SHRA Logo" className="w-full h-auto rounded-lg" />
                   </div>
                   <div className="absolute -z-10 -bottom-3 -right-3 w-full h-full bg-element-orange/20 rounded-xl"></div>
                 </div>
@@ -87,7 +77,7 @@ const About: React.FC = () => {
               <div className="bg-white p-6 rounded-xl shadow-md">
                 <div className="flex flex-col md:flex-row gap-4">
                   <div className="md:w-1/4 flex items-center justify-center">
-                    <div className="h-16 w-16 rounded-full bg-element-navy text-white flex items-center justify-center text-xl font-bold">1970</div>
+                    <div className="h-16 w-16 rounded-full bg-element-navy text-white flex items-center justify-center text-xl font-bold">2025</div>
                   </div>
                   <div className="md:w-3/4">
                     <h3 className="text-xl font-bold text-element-navy mb-2">Agency Founding</h3>
@@ -134,8 +124,7 @@ const About: React.FC = () => {
           <div className="container px-4 mx-auto max-w-7xl">
             <h2 className="text-3xl font-bold text-element-navy mb-8 text-center">Our Leadership Team</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[1, 2, 3].map((index) => (
-                <div key={index} className="bg-element-lightBlue rounded-xl p-6 text-center">
+              {[1, 2, 3].map(index => <div key={index} className="bg-element-lightBlue rounded-xl p-6 text-center">
                   <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4">
                     {/* Placeholder for team member photo */}
                   </div>
@@ -144,8 +133,7 @@ const About: React.FC = () => {
                   <p className="text-element-charcoal/80">
                     Dedicated to improving housing accessibility and community development in Sacramento.
                   </p>
-                </div>
-              ))}
+                </div>)}
             </div>
           </div>
         </section>
@@ -175,8 +163,6 @@ const About: React.FC = () => {
 
       {/* Footer */}
       <FooterSection />
-    </div>
-  );
+    </div>;
 };
-
 export default About;
