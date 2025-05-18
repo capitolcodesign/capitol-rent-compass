@@ -18,7 +18,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   
   useEffect(() => {
     if (!isLoading) {
-      setStableAuth(true);
+      // Add a small delay to prevent flashing during auth state transition
+      const timer = setTimeout(() => {
+        setStableAuth(true);
+      }, 50);
+      
+      return () => clearTimeout(timer);
     }
   }, [isLoading]);
   

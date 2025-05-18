@@ -14,25 +14,8 @@ export const fetchUserProfile = async (userId: string, session: Session | null):
       return null;
     }
     
-    // Extract user metadata from session directly
-    const { user_metadata } = session.user;
-    
-    if (user_metadata) {
-      console.log("Using user metadata from session:", user_metadata);
-      // Create user from session metadata without database query
-      // This avoids the recursive RLS policy issue
-      return {
-        id: userId,
-        email: session.user.email || '',
-        firstName: user_metadata.first_name || '',
-        lastName: user_metadata.last_name || '',
-        // Cast role to UserRole type to satisfy TypeScript
-        role: (user_metadata.role as UserRole) || 'staff'
-      };
-    }
-    
-    // If no metadata available, check database as fallback
-    console.log("No metadata in session, checking database");
+    // First try to fetch from the profiles table (preferred source)
+    console.log("Fetching user profile from database");
     const { data: profileData, error } = await supabase
       .from('profiles')
       .select('first_name, last_name, role')
@@ -41,7 +24,22 @@ export const fetchUserProfile = async (userId: string, session: Session | null):
       
     if (error) {
       console.error("Error fetching from profiles:", error);
-      // Create minimal profile if database fetch fails
+      
+      // Fallback to session metadata if database fetch fails
+      const { user_metadata } = session.user;
+      
+      if (user_metadata) {
+        console.log("Falling back to user metadata from session:", user_metadata);
+        return {
+          id: userId,
+          email: session.user.email || '',
+          firstName: user_metadata.first_name || '',
+          lastName: user_metadata.last_name || '',
+          role: (user_metadata.role as UserRole) || 'staff'
+        };
+      }
+      
+      // Create minimal profile as a last resort
       return {
         id: userId,
         email: session.user.email || '',
