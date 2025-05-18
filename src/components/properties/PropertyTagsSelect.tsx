@@ -22,6 +22,7 @@ interface TagRelation {
   property_id: string;
   tag_id: string;
   tag?: Tag;
+  property_tags?: Tag; // Add this property to fix the type error
 }
 
 const PropertyTagsSelect: React.FC<PropertyTagsSelectProps> = ({ propertyId }) => {
@@ -44,7 +45,7 @@ const PropertyTagsSelect: React.FC<PropertyTagsSelectProps> = ({ propertyId }) =
       // Fetch tags assigned to this property
       const { data: propertyTags, error: propertyTagsError } = await supabase
         .from('property_tag_relations')
-        .select('*, property_tags(id, name)')
+        .select('*, tag:property_tags(id, name)')
         .eq('property_id', propertyId);
       
       if (propertyTagsError) throw propertyTagsError;
@@ -117,7 +118,7 @@ const PropertyTagsSelect: React.FC<PropertyTagsSelectProps> = ({ propertyId }) =
           property_id: propertyId,
           tag_id: tagId
         })
-        .select('*, property_tags(id, name)')
+        .select('*, tag:property_tags(id, name)')
         .single();
       
       if (relationError) throw relationError;
@@ -162,7 +163,7 @@ const PropertyTagsSelect: React.FC<PropertyTagsSelectProps> = ({ propertyId }) =
           property_id: propertyId,
           tag_id: tag.id
         })
-        .select('*, property_tags(id, name)')
+        .select('*, tag:property_tags(id, name)')
         .single();
       
       if (error) throw error;
@@ -275,7 +276,7 @@ const PropertyTagsSelect: React.FC<PropertyTagsSelectProps> = ({ propertyId }) =
               <div className="flex flex-wrap gap-2">
                 {selectedTags.map((relation) => (
                   <Badge key={relation.id} variant="secondary" className="flex items-center gap-1">
-                    {relation.property_tags?.name || ''}
+                    {relation.tag?.name || ''}
                     <button 
                       onClick={() => handleRemoveTag(relation.id)}
                       className="ml-1 hover:bg-muted rounded-full p-0.5"
