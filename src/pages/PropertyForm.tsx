@@ -4,18 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { Building2, ArrowLeft, CheckCircle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useAuth } from '@/contexts/auth';
+import PropertyFormFields from '@/components/properties/PropertyFormFields';
 
 const PropertyForm = () => {
   const navigate = useNavigate();
@@ -125,85 +117,12 @@ const PropertyForm = () => {
         </CardHeader>
         
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Property Name*</Label>
-              <Input 
-                id="name" 
-                name="name"
-                placeholder="Enter property name" 
-                value={propertyData.name}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="address">Address*</Label>
-              <Input 
-                id="address" 
-                name="address"
-                placeholder="Enter property address" 
-                value={propertyData.address}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="zip">ZIP Code*</Label>
-              <Input 
-                id="zip" 
-                name="zip"
-                placeholder="Enter ZIP code" 
-                value={propertyData.zip}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="type">Property Type</Label>
-                <Select value={propertyData.type} onValueChange={handleTypeChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Multi-family">Multi-family</SelectItem>
-                    <SelectItem value="Single-family">Single-family</SelectItem>
-                    <SelectItem value="Apartment">Apartment</SelectItem>
-                    <SelectItem value="Condo">Condo</SelectItem>
-                    <SelectItem value="Townhouse">Townhouse</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="units">Number of Units</Label>
-                <Input 
-                  id="units" 
-                  name="units"
-                  type="number" 
-                  min="1"
-                  value={propertyData.units}
-                  onChange={handleChange}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="built_year">Year Built</Label>
-                <Input 
-                  id="built_year" 
-                  name="built_year"
-                  type="number" 
-                  min="1900" 
-                  max={new Date().getFullYear()}
-                  value={propertyData.built_year}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
+          <CardContent>
+            <PropertyFormFields
+              propertyData={propertyData}
+              handleChange={handleChange}
+              handleTypeChange={handleTypeChange}
+            />
           </CardContent>
           
           <CardFooter className="flex justify-between">
