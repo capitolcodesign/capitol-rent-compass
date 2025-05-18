@@ -19,6 +19,9 @@ import UserManagement from "./pages/UserManagement";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import SampleUsersCreator from "./pages/SampleUsersCreator";
+import Features from "./pages/Features";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 
 // Create a QueryClient for React Query
 const queryClient = new QueryClient({
@@ -59,6 +62,11 @@ const AppRoutes = () => {
     <Routes>
       {/* Landing page as root route */}
       <Route path="/" element={<LandingPage />} />
+      
+      {/* Public pages */}
+      <Route path="/features" element={<Features />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/contact" element={<Contact />} />
       
       <Route path="/login" element={
         isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />

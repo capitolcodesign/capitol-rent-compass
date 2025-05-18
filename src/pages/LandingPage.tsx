@@ -48,10 +48,10 @@ const LandingPage: React.FC = () => {
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <Logo size="md" />
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="#" className="text-element-charcoal hover:text-element-orange transition-colors">Home</Link>
-            <Link to="#" className="text-element-charcoal hover:text-element-orange transition-colors">Features</Link>
-            <Link to="#" className="text-element-charcoal hover:text-element-orange transition-colors">About</Link>
-            <Link to="#" className="text-element-charcoal hover:text-element-orange transition-colors">Contact</Link>
+            <Link to="/" className="text-element-orange font-medium transition-colors">Home</Link>
+            <Link to="/features" className="text-element-charcoal hover:text-element-orange transition-colors">Features</Link>
+            <Link to="/about" className="text-element-charcoal hover:text-element-orange transition-colors">About</Link>
+            <Link to="/contact" className="text-element-charcoal hover:text-element-orange transition-colors">Contact</Link>
           </div>
           <div className="flex items-center space-x-4">
             <Link 
