@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PropertyDetails, MarketData, Metrics, EvaluationResult, FairnessEvalRequest } from '@/types/rental-fairness';
 import { Button } from '@/components/ui/button';
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import PropertyDetailsForm from '@/components/rental-fairness/PropertyDetailsForm';
 import MarketDataForm from '@/components/rental-fairness/MarketDataForm';
@@ -14,7 +13,6 @@ const RentalFairness: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("property-details");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [evaluationResult, setEvaluationResult] = useState<EvaluationResult | null>(null);
-  const supabase = useSupabaseClient();
   
   // State for forms
   const [propertyDetails, setPropertyDetails] = useState<PropertyDetails>({
