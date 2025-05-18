@@ -45,6 +45,17 @@ interface FairnessEvalRequest {
   };
 }
 
+interface EvaluationResult {
+  fairnessScore: number;
+  analysis: string;
+  recommendations: string[] | string;
+  fairPriceRange: {
+    min: number;
+    max: number;
+  };
+  summary: string;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -118,10 +129,10 @@ serve(async (req) => {
       Please provide:
       1. A fairness score from 1-100 (where 100 is perfectly fair)
       2. A detailed analysis based on the above metrics
-      3. Recommendations to make the rent more fair if needed
+      3. Recommendations to make the rent more fair if needed (provide as an array of strings)
       4. A price range that would be considered fair for this property
       
-      Format your response as a JSON object with these keys: fairnessScore, analysis, recommendations (as an array), fairPriceRange (with min and max values), and a summary.
+      Format your response as a JSON object with these keys: fairnessScore, analysis, recommendations (as an array of strings), fairPriceRange (with min and max values), and a summary.
     `;
 
     // Make API call to OpenAI
@@ -152,7 +163,13 @@ serve(async (req) => {
         aiOutput = jsonMatch[0];
       }
       
-      const parsedOutput = JSON.parse(aiOutput);
+      const parsedOutput = JSON.parse(aiOutput) as EvaluationResult;
+      
+      // Ensure recommendations is an array
+      if (typeof parsedOutput.recommendations === 'string') {
+        parsedOutput.recommendations = [parsedOutput.recommendations];
+      }
+      
       return new Response(JSON.stringify(parsedOutput), {
         status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },

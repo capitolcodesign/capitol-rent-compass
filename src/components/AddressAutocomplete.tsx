@@ -52,7 +52,8 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       
       const keys: Record<string, string> = {};
       data.forEach(item => {
-        keys[item.key] = item.value;
+        // Ensure value is cast to string to avoid type issues
+        keys[item.key] = String(item.value);
       });
       
       return keys;
@@ -61,7 +62,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   // Initialize Google Places Autocomplete after the API key is fetched
   useEffect(() => {
-    if (!apiKeys?.google_maps_api_key || window.google?.maps?.places) return;
+    if (!apiKeys?.google_maps_api_key || (window as any).google?.maps?.places) return;
     
     const script = document.createElement('script');
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKeys.google_maps_api_key}&libraries=places`;
@@ -126,7 +127,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     
     const timeoutId = setTimeout(fetchSuggestions, 300);
     return () => clearTimeout(timeoutId);
-  }, [searchValue, autocompleteService.current]);
+  }, [searchValue]);
 
   const handleAddressSelect = (address: Address) => {
     if (!placesService.current) {

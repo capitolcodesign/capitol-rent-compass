@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -78,7 +77,7 @@ const Settings: React.FC = () => {
           firstName: profile.first_name || '',
           lastName: profile.last_name || '',
           role, // Now typed correctly as UserRole
-          created_at: profile.created_at
+          created_at: String(profile.created_at)
         } as UserDisplay;
       }) || [];
     },
@@ -99,7 +98,8 @@ const Settings: React.FC = () => {
       // Convert array to object for easier access
       const integrations: Record<string, string> = {};
       data?.forEach(item => {
-        integrations[item.key] = item.value;
+        // Ensure the value is converted to string
+        integrations[item.key] = String(item.value);
       });
       
       return integrations;

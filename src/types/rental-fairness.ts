@@ -53,7 +53,7 @@ export interface FairnessEvalRequest {
 export interface EvaluationResult {
   fairnessScore: number;
   analysis: string;
-  recommendations: string[];
+  recommendations: string[] | string;
   fairPriceRange: {
     min: number;
     max: number;

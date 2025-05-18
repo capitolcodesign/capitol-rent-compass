@@ -44,6 +44,16 @@ const FairnessResult: React.FC<FairnessResultProps> = ({ result, isLoading }) =>
   if (!result) return null;
 
   const scoreColor = getScoreColor(result.fairnessScore);
+  
+  // Handle recommendations properly whether it's a string or an array
+  const recommendationsArray = Array.isArray(result.recommendations) 
+    ? result.recommendations 
+    : [result.recommendations];
+
+  // Handle analysis text properly whether it's a string or not
+  const analysisText = typeof result.analysis === 'string' 
+    ? result.analysis 
+    : JSON.stringify(result.analysis);
 
   return (
     <Card>
@@ -86,7 +96,7 @@ const FairnessResult: React.FC<FairnessResultProps> = ({ result, isLoading }) =>
             <div>
               <h3 className="font-medium text-lg mb-2">Analysis</h3>
               <div className="text-sm space-y-2">
-                {result.analysis.split('\n').map((paragraph, index) => (
+                {analysisText.split('\n').map((paragraph, index) => (
                   <p key={index}>{paragraph}</p>
                 ))}
               </div>
@@ -95,8 +105,8 @@ const FairnessResult: React.FC<FairnessResultProps> = ({ result, isLoading }) =>
             <div>
               <h3 className="font-medium text-lg mb-2">Recommendations</h3>
               <div className="text-sm space-y-2">
-                {result.recommendations.split('\n').map((rec, index) => (
-                  <p key={index}>{rec}</p>
+                {recommendationsArray.map((rec, index) => (
+                  <p key={index}>{typeof rec === 'string' ? rec : JSON.stringify(rec)}</p>
                 ))}
               </div>
             </div>
