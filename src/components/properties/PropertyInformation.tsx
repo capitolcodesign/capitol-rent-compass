@@ -1,8 +1,7 @@
 
 import React, { useState } from 'react';
-import { Building2, MapPin, Home, Calendar, Tag, CheckSquare, Edit, Plus } from 'lucide-react';
+import { Building2, MapPin, Home, Calendar, Edit, Plus } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,19 +29,8 @@ interface PropertyDetail {
   created_at?: string;
 }
 
-interface PropertyTag {
-  id: string;
-  name: string;
-}
-
 interface PropertyInformationProps {
   property: PropertyDetail;
-  tags?: PropertyTag[];
-  amenities?: {
-    id: string;
-    name: string;
-    category: string | null;
-  }[];
   customFields?: {
     id: string;
     field_name: string;
@@ -52,65 +40,12 @@ interface PropertyInformationProps {
 }
 
 const PropertyInformation: React.FC<PropertyInformationProps> = ({ 
-  property, 
-  tags, 
-  amenities = [],
+  property,
   customFields = []
 }) => {
-  const [editingAmenity, setEditingAmenity] = useState<{id?: string, name: string, category: string} | null>(null);
   const [editingField, setEditingField] = useState<{id?: string, name: string, value: string, type: string} | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  const handleSaveAmenity = async () => {
-    if (!editingAmenity || !editingAmenity.name) return;
-    
-    try {
-      if (editingAmenity.id) {
-        // Update existing amenity
-        const { error } = await supabase
-          .from('property_amenities')
-          .update({
-            name: editingAmenity.name,
-            category: editingAmenity.category || null
-          })
-          .eq('id', editingAmenity.id);
-          
-        if (error) throw error;
-        
-        toast({
-          title: "Amenity Updated",
-          description: "The amenity has been updated successfully."
-        });
-      } else {
-        // Add new amenity
-        const { error } = await supabase
-          .from('property_amenities')
-          .insert({
-            property_id: property.id,
-            name: editingAmenity.name,
-            category: editingAmenity.category || null
-          });
-          
-        if (error) throw error;
-        
-        toast({
-          title: "Amenity Added",
-          description: "The amenity has been added successfully."
-        });
-      }
-      
-      // Refresh data
-      queryClient.invalidateQueries({ queryKey: ['property-amenities', property.id] });
-      setEditingAmenity(null);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: `Failed to save amenity: ${(error as Error).message}`,
-        variant: "destructive"
-      });
-    }
-  };
 
   const handleSaveCustomField = async () => {
     if (!editingField || !editingField.name) return;
@@ -172,10 +107,9 @@ const PropertyInformation: React.FC<PropertyInformationProps> = ({
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="details">
-          <TabsList className="grid grid-cols-4 mb-4">
+          <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="details" className="text-sm">Details</TabsTrigger>
             <TabsTrigger value="gallery" className="text-sm">Gallery</TabsTrigger>
-            <TabsTrigger value="amenities" className="text-sm">Amenities</TabsTrigger>
             <TabsTrigger value="custom" className="text-sm">Custom Fields</TabsTrigger>
           </TabsList>
           
@@ -226,78 +160,11 @@ const PropertyInformation: React.FC<PropertyInformationProps> = ({
                   </div>
                 </div>
               )}
-
-              {tags && tags.length > 0 && (
-                <div className="mt-4">
-                  <p className="text-sm font-medium mb-2">Tags</p>
-                  <div className="flex flex-wrap gap-2">
-                    {tags.map((tag) => (
-                      <Badge key={tag.id} variant="outline" className="flex items-center">
-                        <Tag className="mr-1 h-3 w-3" />
-                        {tag.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </TabsContent>
           
           <TabsContent value="gallery">
             <PropertyImageCarousel propertyId={property.id} />
-          </TabsContent>
-          
-          <TabsContent value="amenities">
-            <div className="flex justify-between mb-4">
-              <h3 className="text-lg font-medium">Property Amenities</h3>
-              <Button size="sm" onClick={() => setEditingAmenity({ name: '', category: '' })}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Amenity
-              </Button>
-            </div>
-            
-            {amenities.length > 0 ? (
-              <div className="space-y-6">
-                {/* Group amenities by category */}
-                {Object.entries(amenities.reduce<Record<string, typeof amenities>>((acc, amenity) => {
-                  const category = amenity.category || 'Other';
-                  if (!acc[category]) acc[category] = [];
-                  acc[category].push(amenity);
-                  return acc;
-                }, {})).map(([category, items]) => (
-                  <div key={category} className="space-y-2">
-                    <h3 className="text-lg font-medium">{category}</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {items.map(amenity => (
-                        <Badge 
-                          key={amenity.id} 
-                          variant="secondary" 
-                          className="flex items-center group"
-                        >
-                          <CheckSquare className="mr-1 h-3 w-3" />
-                          {amenity.name}
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-5 w-5 p-0 ml-1 opacity-0 group-hover:opacity-100"
-                            onClick={() => setEditingAmenity({
-                              id: amenity.id,
-                              name: amenity.name,
-                              category: amenity.category || ''
-                            })}
-                          >
-                            <Edit className="h-3 w-3" />
-                            <span className="sr-only">Edit</span>
-                          </Button>
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">No amenities listed for this property.</p>
-            )}
           </TabsContent>
           
           <TabsContent value="custom">
@@ -339,45 +206,6 @@ const PropertyInformation: React.FC<PropertyInformationProps> = ({
           </TabsContent>
         </Tabs>
       </CardContent>
-      
-      {/* Amenity Edit Dialog */}
-      <Dialog open={!!editingAmenity} onOpenChange={(open) => !open && setEditingAmenity(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingAmenity?.id ? 'Edit' : 'Add'} Amenity</DialogTitle>
-            <DialogDescription>
-              Enter the details for this property amenity.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <label htmlFor="amenity-name" className="text-sm font-medium">Name</label>
-              <Input
-                id="amenity-name"
-                value={editingAmenity?.name || ''}
-                onChange={(e) => setEditingAmenity(prev => prev ? { ...prev, name: e.target.value } : null)}
-                placeholder="Amenity name"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="amenity-category" className="text-sm font-medium">Category</label>
-              <Input
-                id="amenity-category"
-                value={editingAmenity?.category || ''}
-                onChange={(e) => setEditingAmenity(prev => prev ? { ...prev, category: e.target.value } : null)}
-                placeholder="Category (e.g. Kitchen, Bathroom, Outdoor)"
-              />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingAmenity(null)}>Cancel</Button>
-            <Button onClick={handleSaveAmenity}>Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
       
       {/* Custom Field Edit Dialog */}
       <Dialog open={!!editingField} onOpenChange={(open) => !open && setEditingField(null)}>

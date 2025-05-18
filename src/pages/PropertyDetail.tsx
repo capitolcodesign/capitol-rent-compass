@@ -11,6 +11,7 @@ import PropertyDetailHeader from '@/components/properties/PropertyDetailHeader';
 import PropertyInformation from '@/components/properties/PropertyInformation';
 import PropertySummary from '@/components/properties/PropertySummary';
 import PropertyReports from '@/components/properties/PropertyReports';
+import PropertyAmenitiesTags from '@/components/properties/PropertyAmenitiesTags';
 import PropertyTabs from '@/components/properties/PropertyTabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ChevronLeft } from 'lucide-react';
@@ -303,10 +304,13 @@ const PropertyDetail = () => {
           {/* Property Information Card */}
           <PropertyInformation 
             property={property} 
-            tags={tags} 
-            amenities={amenities}
             customFields={customFields}
           />
+          
+          {/* Property Amenities and Tags with Checkboxes */}
+          <div className="mb-6">
+            <PropertyAmenitiesTags propertyId={property.id} />
+          </div>
 
           {/* Property Tabs: Notes, Attributes, Images */}
           <PropertyTabs notes={notes} attributes={attributes} propertyId={property.id} />
