@@ -1,10 +1,44 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Logo from '@/components/Logo';
 import { Twitter, Facebook, Instagram, Linkedin, Github, Mail, Phone, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
 
 const FooterSection: React.FC = () => {
+  const { toast } = useToast();
+  const [email, setEmail] = useState('');
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast({
+        title: "Email Required",
+        description: "Please enter an email address to subscribe.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Subscription Successful",
+      description: "Thank you for subscribing to our newsletter!",
+    });
+    setEmail('');
+  };
+
   return (
     <footer className="bg-element-lightBlue py-16 px-4">
       <div className="container mx-auto max-w-7xl">
@@ -79,16 +113,22 @@ const FooterSection: React.FC = () => {
             <p className="text-element-charcoal/70 mb-6">
               Stay updated with the latest features, news, and housing market trends.
             </p>
-            <div className="flex flex-col sm:flex-row gap-2">
+            <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-2">
               <input 
                 type="email" 
                 placeholder="Enter your email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="px-4 py-3 rounded-md border border-gray-200 flex-grow focus:outline-none focus:ring-2 focus:ring-element-orange focus:border-transparent"
               />
-              <button className="bg-element-orange hover:bg-element-orange/90 text-white font-medium px-6 py-3 rounded-md transition-colors whitespace-nowrap">
+              <Button 
+                type="submit"
+                variant="primary"
+                className="px-6 py-3 whitespace-nowrap"
+              >
                 Subscribe
-              </button>
-            </div>
+              </Button>
+            </form>
           </div>
         </div>
         

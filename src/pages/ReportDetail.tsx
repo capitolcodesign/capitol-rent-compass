@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -106,6 +105,54 @@ const ReportDetail = () => {
     });
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleDownload = () => {
+    toast({
+      title: "Report Download Started",
+      description: "Your report is being generated and will download shortly.",
+    });
+    
+    // Simulate download after a delay
+    setTimeout(() => {
+      // Create a blob that simulates a PDF file
+      const blob = new Blob([`Report ${id} content would go here`], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      
+      // Create a link element and trigger a download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `report-${id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 1000);
+  };
+
+  const handleShare = () => {
+    // Modern browsers have a Web Share API that we can use
+    if (navigator.share) {
+      navigator.share({
+        title: report?.name || 'Report',
+        text: report?.description || 'Check out this report',
+        url: window.location.href,
+      }).catch((error) => {
+        toast({
+          title: "Share failed",
+          description: "Unable to share report",
+        });
+      });
+    } else {
+      // Fallback to copy link
+      handleCopyLink();
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -162,15 +209,15 @@ const ReportDetail = () => {
             <Copy className="mr-2 h-4 w-4" />
             Copy Link
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handlePrint}>
             <Printer className="mr-2 h-4 w-4" />
             Print
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleShare}>
             <Share2 className="mr-2 h-4 w-4" />
             Share
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleDownload}>
             <Download className="mr-2 h-4 w-4" />
             Download
           </Button>

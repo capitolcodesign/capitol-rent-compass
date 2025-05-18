@@ -6,8 +6,42 @@ import FooterSection from '@/components/landing/FooterSection';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, FileText, ArrowLeft, Download, Printer } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/components/ui/use-toast';
 
 const HudGuidelines: React.FC = () => {
+  const { toast } = useToast();
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleDownloadPDF = () => {
+    // In a real application, you would generate a PDF using a library like jsPDF
+    // For now, we'll simulate the download with a toast notification
+    toast({
+      title: "PDF Download Started",
+      description: "Your PDF is being generated and will download shortly.",
+    });
+    
+    // Simulated delay to represent PDF generation
+    setTimeout(() => {
+      // Create a blob that simulates a PDF file
+      const blob = new Blob(["HUD Guidelines PDF content would go here"], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      
+      // Create a link element and trigger a download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'hud-guidelines.pdf';
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 1000);
+  };
+
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
@@ -65,10 +99,20 @@ const HudGuidelines: React.FC = () => {
               </div>
               
               <div className="flex flex-wrap gap-3 mb-8">
-                <Button variant="outline" size="sm" className="flex items-center">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center"
+                  onClick={handleDownloadPDF}
+                >
                   <Download className="mr-1 h-4 w-4" /> Download PDF
                 </Button>
-                <Button variant="outline" size="sm" className="flex items-center">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center"
+                  onClick={handlePrint}
+                >
                   <Printer className="mr-1 h-4 w-4" /> Print
                 </Button>
               </div>
