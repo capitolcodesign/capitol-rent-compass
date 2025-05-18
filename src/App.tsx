@@ -10,6 +10,8 @@ import Dashboard from "./pages/Dashboard";
 import PropertyList from "./pages/PropertyList";
 import RentAnalysis from "./pages/RentAnalysis";
 import Reports from "./pages/Reports";
+import UserManagement from "./pages/UserManagement";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import SampleUsersCreator from "./pages/SampleUsersCreator";
 
@@ -78,14 +80,10 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       
-      {/* Add placeholder routes for the rest of the navigation */}
       <Route path="/users" element={
         <ProtectedRoute>
           <MainLayout>
-            <div className="p-6">
-              <h1 className="text-2xl font-bold mb-4">User Management</h1>
-              <p>This page will contain user management functionality.</p>
-            </div>
+            <UserManagement />
           </MainLayout>
         </ProtectedRoute>
       } />
@@ -93,10 +91,7 @@ const AppRoutes = () => {
       <Route path="/settings" element={
         <ProtectedRoute>
           <MainLayout>
-            <div className="p-6">
-              <h1 className="text-2xl font-bold mb-4">Settings</h1>
-              <p>This page will contain application settings.</p>
-            </div>
+            <Settings />
           </MainLayout>
         </ProtectedRoute>
       } />

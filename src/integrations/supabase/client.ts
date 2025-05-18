@@ -72,3 +72,39 @@ export const createSampleUsers = async () => {
     return { success: false, message: 'Failed to create sample users' };
   }
 };
+
+// Utility function to format address components for geocoding
+export const formatAddressComponents = (address: string) => {
+  // Sample implementation - in a real app this would use a geocoding service
+  // like Google Maps API to extract components and geocode the address
+  
+  const addressParts = address.split(',').map(part => part.trim());
+  
+  // Default address components
+  const components = {
+    street: addressParts[0] || '',
+    city: addressParts[1] || '',
+    state: '',
+    zip: '',
+    latitude: null as number | null,
+    longitude: null as number | null
+  };
+  
+  // Try to extract state and zip from the last part
+  if (addressParts.length > 2) {
+    const stateZip = addressParts[addressParts.length - 1].split(' ');
+    if (stateZip.length >= 2) {
+      components.state = stateZip[0];
+      components.zip = stateZip[stateZip.length - 1];
+    }
+  }
+  
+  // Simulate geocoding result (would come from an API in real implementation)
+  if (address.includes('Sacramento')) {
+    components.latitude = 38.5816;
+    components.longitude = -121.4944;
+  }
+  
+  return components;
+};
+

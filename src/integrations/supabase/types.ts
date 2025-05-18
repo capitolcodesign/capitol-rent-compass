@@ -9,6 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string | null
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -40,11 +61,16 @@ export type Database = {
         Row: {
           address: string
           built_year: number
+          city: string | null
           created_at: string | null
           id: string
           last_analysis: string | null
+          latitude: number | null
+          longitude: number | null
           name: string
           property_id: string
+          state: string | null
+          street: string | null
           type: string
           units: number
           user_id: string | null
@@ -53,11 +79,16 @@ export type Database = {
         Insert: {
           address: string
           built_year: number
+          city?: string | null
           created_at?: string | null
           id?: string
           last_analysis?: string | null
+          latitude?: number | null
+          longitude?: number | null
           name?: string
           property_id: string
+          state?: string | null
+          street?: string | null
           type: string
           units: number
           user_id?: string | null
@@ -66,11 +97,16 @@ export type Database = {
         Update: {
           address?: string
           built_year?: number
+          city?: string | null
           created_at?: string | null
           id?: string
           last_analysis?: string | null
+          latitude?: number | null
+          longitude?: number | null
           name?: string
           property_id?: string
+          state?: string | null
+          street?: string | null
           type?: string
           units?: number
           user_id?: string | null
@@ -233,6 +269,83 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      report_templates: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          template_data: Json
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          template_data: Json
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          template_data?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          data: Json
+          description: string | null
+          id: string
+          name: string
+          report_id: string
+          status: string | null
+          template_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          data: Json
+          description?: string | null
+          id?: string
+          name: string
+          report_id: string
+          status?: string | null
+          template_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          data?: Json
+          description?: string | null
+          id?: string
+          name?: string
+          report_id?: string
+          status?: string | null
+          template_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "report_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
