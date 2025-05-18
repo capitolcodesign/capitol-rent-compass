@@ -9,6 +9,70 @@ import { cn } from "@/lib/utils";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+// Define types for Google Maps API
+declare global {
+  interface Window {
+    google: {
+      maps: {
+        places: {
+          AutocompleteService: new () => google.maps.places.AutocompleteService;
+          PlacesService: new (element: HTMLElement) => google.maps.places.PlacesService;
+          PlacesServiceStatus: {
+            OK: string;
+          };
+        };
+      };
+    };
+  }
+}
+
+namespace google.maps.places {
+  export interface AutocompleteService {
+    getPlacePredictions: (
+      request: AutocompletionRequest,
+      callback: (predictions?: AutocompletePrediction[] | null, status?: string) => void
+    ) => void;
+  }
+
+  export interface AutocompletePrediction {
+    description: string;
+    place_id: string;
+    structured_formatting?: {
+      main_text: string;
+      secondary_text: string;
+    };
+  }
+
+  export interface AutocompletionRequest {
+    input: string;
+    types?: string[];
+  }
+
+  export interface PlacesService {
+    getDetails: (
+      request: {
+        placeId: string;
+      },
+      callback: (result?: google.maps.places.PlaceResult | null, status?: string) => void
+    ) => void;
+  }
+
+  export interface PlaceResult {
+    address_components?: Array<{
+      long_name: string;
+      short_name: string;
+      types: string[];
+    }>;
+    formatted_address?: string;
+    geometry?: {
+      location?: {
+        lat: () => number;
+        lng: () => number;
+      };
+    };
+  }
+}
+
 interface Address {
   id: string;
   full: string;
@@ -60,30 +124,57 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     }
   });
 
+  // Set default value whenever it changes
+  useEffect(() => {
+    if (defaultValue) {
+      setSearchValue(defaultValue);
+    }
+  }, [defaultValue]);
+
   // Initialize Google Places Autocomplete after the API key is fetched
   useEffect(() => {
-    if (!apiKeys?.google_maps_api_key || (window as any).google?.maps?.places) return;
+    if (!apiKeys?.google_maps_api_key || window.google?.maps?.places) return;
+    
+    // Check if script is already loaded
+    const existingScript = document.querySelector(`script[src*="maps.googleapis.com/maps/api/js"]`);
+    if (existingScript) {
+      initializePlacesServices();
+      return;
+    }
     
     const script = document.createElement('script');
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKeys.google_maps_api_key}&libraries=places`;
     script.async = true;
     script.defer = true;
-    script.onload = () => {
-      autocompleteService.current = new google.maps.places.AutocompleteService();
-      
-      // Create a dummy div for Places Service
-      const placesDiv = document.createElement('div');
-      placesDiv.style.display = 'none';
-      document.body.appendChild(placesDiv);
-      
-      placesService.current = new google.maps.places.PlacesService(placesDiv);
-    };
+    script.onload = initializePlacesServices;
     document.head.appendChild(script);
     
     return () => {
-      document.head.removeChild(script);
+      // Only remove script if we added it
+      if (!existingScript) {
+        const scriptToRemove = document.querySelector(`script[src*="maps.googleapis.com/maps/api/js"]`);
+        if (scriptToRemove && scriptToRemove.parentNode) {
+          scriptToRemove.parentNode.removeChild(scriptToRemove);
+        }
+      }
     };
   }, [apiKeys?.google_maps_api_key]);
+
+  const initializePlacesServices = () => {
+    if (!window.google?.maps?.places) {
+      console.error('Google Maps Places API not loaded');
+      return;
+    }
+    
+    autocompleteService.current = new window.google.maps.places.AutocompleteService();
+    
+    // Create a dummy div for Places Service
+    const placesDiv = document.createElement('div');
+    placesDiv.style.display = 'none';
+    document.body.appendChild(placesDiv);
+    
+    placesService.current = new window.google.maps.places.PlacesService(placesDiv);
+  };
 
   // Handle address search with Google Places API
   useEffect(() => {
@@ -100,7 +191,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             types: ['address']
           },
           (predictions, status) => {
-            if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
+            if (status !== 'OK' || !predictions) {
               console.error('Error fetching place predictions:', status);
               return;
             }
@@ -138,7 +229,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     placesService.current.getDetails(
       { placeId: address.id },
       (place, status) => {
-        if (status !== google.maps.places.PlacesServiceStatus.OK || !place || !place.geometry) {
+        if (status !== 'OK' || !place || !place.geometry) {
           console.error('Error fetching place details:', status);
           return;
         }

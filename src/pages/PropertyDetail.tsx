@@ -33,6 +33,11 @@ interface PropertyDetail {
   longitude?: number;
   last_analysis?: string;
   created_at?: string;
+  rent?: number;
+  square_feet?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  condition?: string;
 }
 
 interface PropertyAttribute {
@@ -238,6 +243,12 @@ const PropertyDetail = () => {
     }
   };
 
+  // Extract amenities names for fairness calculator
+  const extractAmenityNames = () => {
+    if (!amenities) return [];
+    return amenities.map(amenity => amenity.name);
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -339,13 +350,12 @@ const PropertyDetail = () => {
                 lat: property.latitude || 0,
                 lng: property.longitude || 0
               },
-              // These values need to be set by the user in the calculator
-              rent: 0,
-              squareFeet: 0,
-              bedrooms: 0,
-              bathrooms: 0,
-              amenities: [],
-              condition: ''
+              rent: property.rent || 0,
+              squareFeet: property.square_feet || 0,
+              bedrooms: property.bedrooms || 0,
+              bathrooms: property.bathrooms || 0,
+              amenities: extractAmenityNames(),
+              condition: property.condition || ''
             }}
           />
         </DialogContent>

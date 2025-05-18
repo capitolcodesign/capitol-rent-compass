@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -51,6 +52,23 @@ const FairnessCalculator: React.FC<FairnessCalculatorProps> = ({ propertyDetails
   const [result, setResult] = useState<EvaluationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const { toast } = useToast();
+
+  // Effect to update details when propertyDetails prop changes
+  useEffect(() => {
+    if (propertyDetails) {
+      setDetails(prevDetails => ({
+        ...prevDetails,
+        rent: propertyDetails.rent || prevDetails.rent,
+        squareFeet: propertyDetails.squareFeet || prevDetails.squareFeet,
+        bedrooms: propertyDetails.bedrooms || prevDetails.bedrooms,
+        bathrooms: propertyDetails.bathrooms || prevDetails.bathrooms,
+        location: propertyDetails.location || prevDetails.location,
+        locationDetails: propertyDetails.locationDetails || prevDetails.locationDetails,
+        amenities: propertyDetails.amenities || prevDetails.amenities,
+        condition: propertyDetails.condition || prevDetails.condition
+      }));
+    }
+  }, [propertyDetails]);
 
   const handleCalculate = async () => {
     // Validate inputs
