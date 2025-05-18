@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -71,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: session?.user?.email || '',
           firstName: profile.first_name || '',
           lastName: profile.last_name || '',
-          role: profile.role as UserRole || 'staff'
+          role: (profile.role as UserRole) || 'staff'
         };
       }
       
@@ -83,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: session?.user?.email || '',
           firstName: session?.user?.user_metadata?.first_name || '',
           lastName: session?.user?.user_metadata?.last_name || '',
-          role: 'staff' // Default role
+          role: 'staff' as UserRole // Explicitly cast to UserRole
         };
       }
       
