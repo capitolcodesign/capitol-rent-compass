@@ -1,73 +1,74 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, Search, Filter, ArrowUpDown } from 'lucide-react';
+import { Building2, Filter, Plus, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 
-interface Report {
+interface Property {
   id: string;
   name: string;
-  report_id: string;
-  status: string | null;
-  created_at: string | null;
+  address: string;
+  type: string;
+  units: number;
+  last_analysis: string | null;
 }
 
-export default function Reports() {
+export default function PropertyList() {
   const navigate = useNavigate();
-  const [reports, setReports] = useState<Report[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  const fetchReports = async () => {
+  const fetchProperties = async () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('reports')
-        .select('id, name, report_id, status, created_at')
-        .order('created_at', { ascending: false });
+        .from('properties')
+        .select('id, name, address, type, units, last_analysis')
+        .order('name');
         
       if (error) {
         throw error;
       }
       
-      setReports(data || []);
+      setProperties(data || []);
     } catch (error) {
-      console.error('Error fetching reports:', error);
+      console.error('Error fetching properties:', error);
     } finally {
       setIsLoading(false);
     }
   };
   
   useEffect(() => {
-    fetchReports();
+    fetchProperties();
   }, []);
   
-  const filteredReports = searchQuery.trim() === ''
-    ? reports
-    : reports.filter(report => 
-        report.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        report.report_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (report.status || '').toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredProperties = searchQuery.trim() === ''
+    ? properties
+    : properties.filter(property => 
+        property.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        property.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        property.type.toLowerCase().includes(searchQuery.toLowerCase())
       );
-  
+      
   return (
     <div className="p-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Reports</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Properties</h1>
           <p className="text-muted-foreground">
-            View and manage rent analysis reports.
+            Manage and analyze your rental properties.
           </p>
         </div>
         <div className="mt-4 md:mt-0">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
-            Create Report
+            Add Property
           </Button>
         </div>
       </div>
@@ -76,7 +77,7 @@ export default function Reports() {
         <div className="relative flex-1">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input 
-            placeholder="Search reports..." 
+            placeholder="Search properties..." 
             className="pl-8"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -90,9 +91,9 @@ export default function Reports() {
       
       <Card>
         <CardHeader className="p-4">
-          <CardTitle>Report List</CardTitle>
+          <CardTitle>Property List</CardTitle>
           <CardDescription>
-            {filteredReports.length} reports found
+            {filteredProperties.length} properties found
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -105,48 +106,48 @@ export default function Reports() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[250px]">Report Name</TableHead>
-                    <TableHead>Report ID</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
+                    <TableHead className="w-[250px]">Property Name</TableHead>
+                    <TableHead>Address</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead className="text-center">Units</TableHead>
+                    <TableHead>Last Analysis</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredReports.length > 0 ? (
-                    filteredReports.map((report) => (
+                  {filteredProperties.length > 0 ? (
+                    filteredProperties.map((property) => (
                       <TableRow 
-                        key={report.id} 
+                        key={property.id} 
                         className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => navigate(`/reports/${report.id}`)}
+                        onClick={() => navigate(`/properties/${property.id}`)}
                       >
                         <TableCell className="font-medium">
                           <div className="flex items-center">
                             <div className="h-8 w-8 rounded bg-secondary/20 flex items-center justify-center mr-2">
-                              <FileText className="h-4 w-4" />
+                              <Building2 className="h-4 w-4" />
                             </div>
-                            {report.name}
+                            {property.name}
                           </div>
                         </TableCell>
-                        <TableCell>{report.report_id}</TableCell>
+                        <TableCell>{property.address}</TableCell>
                         <TableCell>
-                          <Badge variant={report.status === 'published' ? 'default' : 'outline'} className="capitalize">
-                            {report.status || 'draft'}
-                          </Badge>
+                          <Badge variant="outline">{property.type}</Badge>
                         </TableCell>
+                        <TableCell className="text-center">{property.units}</TableCell>
                         <TableCell>
-                          {report.created_at ? 
-                            new Date(report.created_at).toLocaleDateString() : 
-                            'Unknown'
+                          {property.last_analysis ? 
+                            new Date(property.last_analysis).toLocaleDateString() : 
+                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Never</Badge>
                           }
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center h-24 text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
                         {searchQuery.trim() !== '' ? 
-                          'No reports match your search.' : 
-                          'No reports found. Create your first report to get started.'
+                          'No properties match your search.' : 
+                          'No properties found. Add your first property to get started.'
                         }
                       </TableCell>
                     </TableRow>
@@ -158,5 +159,5 @@ export default function Reports() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

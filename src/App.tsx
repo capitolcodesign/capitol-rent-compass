@@ -10,6 +10,9 @@ import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import PropertyList from "./pages/PropertyList";
+import PropertyDetail from "./pages/PropertyDetail";
+import ProfileDetail from "./pages/ProfileDetail";
+import ReportDetail from "./pages/ReportDetail";
 import RentAnalysis from "./pages/RentAnalysis";
 import Reports from "./pages/Reports";
 import UserManagement from "./pages/UserManagement";
@@ -80,6 +83,14 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       
+      <Route path="/properties/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <PropertyDetail />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
       <Route path="/analysis" element={
         <ProtectedRoute>
           <MainLayout>
@@ -96,10 +107,26 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       
+      <Route path="/reports/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <ReportDetail />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
       <Route path="/users" element={
         <ProtectedRoute>
           <MainLayout>
             <UserManagement />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/users/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <ProfileDetail />
           </MainLayout>
         </ProtectedRoute>
       } />
