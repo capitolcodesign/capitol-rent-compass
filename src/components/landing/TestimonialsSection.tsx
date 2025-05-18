@@ -1,30 +1,35 @@
 
 import React from 'react';
+import { Star } from 'lucide-react';
 
 const testimonials = [
   {
-    quote: "The SHRA platform has revolutionized how we approach rent reasonableness determinations.",
+    quote: "The SHRA platform has revolutionized how we approach rent reasonableness determinations. The data-driven insights save us countless hours.",
     author: "Jane Smith",
-    title: "Housing Specialist"
+    title: "Housing Specialist",
+    rating: 5
   },
   {
-    quote: "The analytics provided by this tool have helped us ensure fair pricing across all neighborhoods.",
+    quote: "The analytics provided by this tool have helped us ensure fair pricing across all neighborhoods while meeting program requirements.",
     author: "Michael Johnson",
-    title: "Program Director"
+    title: "Program Director",
+    rating: 5
   },
   {
-    quote: "Implementing this system has improved our efficiency by over 40% while increasing accuracy.",
+    quote: "Implementing this system has improved our efficiency by over 40% while increasing accuracy. The reporting features are exceptional.",
     author: "Sarah Williams",
-    title: "Data Analyst"
+    title: "Data Analyst",
+    rating: 5
   }
 ];
 
 const TestimonialsSection: React.FC = () => {
   return (
-    <section className="py-20 px-4 bg-capitol-charcoal text-white">
-      <div className="container mx-auto max-w-6xl">
+    <section className="py-20 px-4 bg-element-navy text-white">
+      <div className="container mx-auto max-w-7xl">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <span className="text-element-orange font-medium mb-4 block">TESTIMONIALS</span>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
             Trusted by Housing Professionals
           </h2>
           <p className="text-lg text-gray-300 max-w-2xl mx-auto">
@@ -36,23 +41,41 @@ const TestimonialsSection: React.FC = () => {
           {testimonials.map((testimonial, index) => (
             <div 
               key={index}
-              className="bg-white/10 backdrop-blur-sm p-8 rounded-xl"
+              className="bg-white/10 backdrop-blur-sm p-8 rounded-xl hover:bg-white/15 transition-colors"
             >
-              <div className="flex justify-center mb-6">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9.33334 18.6667C9.33334 20.8758 11.1242 22.6667 13.3333 22.6667C15.5425 22.6667 17.3333 20.8758 17.3333 18.6667C17.3333 16.4575 15.5425 14.6667 13.3333 14.6667V12C10.3878 12 8 14.3878 8 17.3333V24H14.6667V18.6667H9.33334Z" fill="#FF9966"/>
-                  <path d="M25.3333 18.6667C25.3333 20.8758 27.1242 22.6667 29.3333 22.6667C31.5425 22.6667 33.3333 20.8758 33.3333 18.6667C33.3333 16.4575 31.5425 14.6667 29.3333 14.6667V12C26.3878 12 24 14.3878 24 17.3333V24H30.6667V18.6667H25.3333Z" fill="#FF9966"/>
-                </svg>
+              <div className="flex mb-4">
+                {[...Array(testimonial.rating)].map((_, i) => (
+                  <Star key={i} className="h-5 w-5 text-element-orange fill-element-orange" />
+                ))}
               </div>
-              <p className="text-white mb-6 italic text-center">
+              <p className="text-white mb-6 text-lg">
                 "{testimonial.quote}"
               </p>
-              <div className="text-center">
-                <p className="font-semibold text-capitol-orange">{testimonial.author}</p>
-                <p className="text-sm text-gray-300">{testimonial.title}</p>
+              <div className="flex items-center">
+                <div className="h-12 w-12 rounded-full bg-element-orange/20 flex items-center justify-center text-element-orange font-bold text-xl">
+                  {testimonial.author.charAt(0)}
+                </div>
+                <div className="ml-4">
+                  <p className="font-semibold text-white">{testimonial.author}</p>
+                  <p className="text-sm text-gray-300">{testimonial.title}</p>
+                </div>
               </div>
             </div>
           ))}
+        </div>
+        
+        <div className="mt-16 text-center">
+          <div className="inline-block p-4 bg-element-orange/10 rounded-lg mb-6">
+            <div className="flex items-center justify-center space-x-1">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="h-6 w-6 text-element-orange fill-element-orange" />
+              ))}
+            </div>
+          </div>
+          <h3 className="text-2xl md:text-3xl font-bold mb-4">Join 50+ Housing Agencies Already Using Our Platform</h3>
+          <p className="text-gray-300 max-w-3xl mx-auto mb-8">
+            Improve efficiency, ensure compliance, and make data-driven decisions with SHRA's Rent Reasonableness Analysis Platform.
+          </p>
         </div>
       </div>
     </section>

@@ -5,83 +5,83 @@
 
 @layer base {
   :root {
-    --background: 48 55% 97%; /* Cream background */
-    --foreground: 0 0% 13%; /* Charcoal text */
+    --background: 210 33% 98%; /* Light blue background */
+    --foreground: 215 28% 17%; /* Dark text */
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 13%;
+    --card-foreground: 215 28% 17%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 13%;
+    --popover-foreground: 215 28% 17%;
 
-    --primary: 24 100% 70%; /* Orange */
+    --primary: 14 100% 60%; /* Orange */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 60%; /* Gray */
-    --secondary-foreground: 0 0% 13%;
+    --secondary: 210 20% 96%; /* Light gray */
+    --secondary-foreground: 215 28% 17%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 15% 45%;
 
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 13%;
+    --accent: 210 20% 96%;
+    --accent-foreground: 215 28% 17%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 89%;
-    --input: 0 0% 89%;
-    --ring: 24 100% 70%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 14 100% 60%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 13%; /* Charcoal */
-    --sidebar-foreground: 48 55% 97%; /* Cream */
-    --sidebar-primary: 24 100% 70%; /* Orange */
+    --sidebar-background: 215 28% 17%; /* Navy */
+    --sidebar-foreground: 0 0% 100%; /* White */
+    --sidebar-primary: 14 100% 60%; /* Orange */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 20%;
-    --sidebar-accent-foreground: 48 55% 97%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 24 100% 70%;
+    --sidebar-accent: 214 27% 25%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 214 27% 25%;
+    --sidebar-ring: 14 100% 60%;
   }
 
   .dark {
-    --background: 0 0% 13%; /* Charcoal background */
-    --foreground: 48 55% 97%; /* Cream text */
+    --background: 215 28% 17%; /* Navy background */
+    --foreground: 210 33% 98%; /* Light text */
 
-    --card: 0 0% 18%;
-    --card-foreground: 48 55% 97%;
+    --card: 215 25% 22%;
+    --card-foreground: 210 33% 98%;
 
-    --popover: 0 0% 18%;
-    --popover-foreground: 48 55% 97%;
+    --popover: 215 25% 22%;
+    --popover-foreground: 210 33% 98%;
 
-    --primary: 24 100% 70%; /* Orange */
+    --primary: 14 100% 60%; /* Orange */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 60%; /* Gray */
-    --secondary-foreground: 48 55% 97%;
+    --secondary: 214 27% 25%; /* Darker navy */
+    --secondary-foreground: 210 33% 98%;
 
-    --muted: 0 0% 25%;
-    --muted-foreground: 0 0% 70%;
+    --muted: 214 27% 25%;
+    --muted-foreground: 210 15% 70%;
 
-    --accent: 0 0% 25%;
-    --accent-foreground: 48 55% 97%;
+    --accent: 214 27% 25%;
+    --accent-foreground: 210 33% 98%;
 
     --destructive: 0 62% 30%;
-    --destructive-foreground: 48 55% 97%;
+    --destructive-foreground: 210 33% 98%;
 
-    --border: 0 0% 25%;
-    --input: 0 0% 25%;
-    --ring: 24 100% 70%;
+    --border: 214 27% 25%;
+    --input: 214 27% 25%;
+    --ring: 14 100% 60%;
 
-    --sidebar-background: 0 0% 13%; /* Charcoal */
-    --sidebar-foreground: 48 55% 97%; /* Cream */
-    --sidebar-primary: 24 100% 70%; /* Orange */
+    --sidebar-background: 215 28% 17%; /* Navy */
+    --sidebar-foreground: 210 33% 98%; /* Light blue */
+    --sidebar-primary: 14 100% 60%; /* Orange */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 20%;
-    --sidebar-accent-foreground: 48 55% 97%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 24 100% 70%;
+    --sidebar-accent: 214 27% 25%;
+    --sidebar-accent-foreground: 210 33% 98%;
+    --sidebar-border: 214 27% 25%;
+    --sidebar-ring: 14 100% 60%;
   }
 }
 
@@ -119,6 +119,33 @@
 
 .stat-card {
   @apply bg-card p-4 rounded-lg shadow-sm border;
+}
+
+/* Section styling */
+.section-container {
+  @apply py-16 md:py-24 px-4 md:px-8 max-w-7xl mx-auto;
+}
+
+.section-title {
+  @apply text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-center;
+}
+
+.section-subtitle {
+  @apply text-lg md:text-xl text-secondary-foreground max-w-3xl mx-auto text-center mb-10 md:mb-16;
+}
+
+/* CTAs and Buttons */
+.primary-btn {
+  @apply bg-element-orange hover:bg-element-orange/90 text-white font-medium rounded-md px-6 py-3 transition-all;
+}
+
+.outline-btn {
+  @apply border border-element-orange text-element-orange hover:bg-element-orange/10 font-medium rounded-md px-6 py-3 transition-all;
+}
+
+/* Card styling */
+.feature-card {
+  @apply bg-white rounded-xl p-6 shadow-md border border-gray-100 hover:shadow-lg transition-shadow;
 }
 
 /* Hexagonal container inspired by the logo */

@@ -2,47 +2,104 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Logo from '@/components/Logo';
+import { Twitter, Facebook, Instagram, Linkedin, GitHub, Mail, Phone, MapPin } from 'lucide-react';
 
 const FooterSection: React.FC = () => {
   return (
-    <footer className="bg-white py-12 px-4">
-      <div className="container mx-auto max-w-6xl">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-10">
-          <div className="mb-6 md:mb-0">
+    <footer className="bg-element-lightBlue py-16 px-4">
+      <div className="container mx-auto max-w-7xl">
+        {/* Main Footer Content */}
+        <div className="flex flex-col md:flex-row justify-between items-start mb-12 gap-10">
+          {/* Logo and Description */}
+          <div className="md:w-1/3">
             <Logo size="md" />
-            <p className="text-gray-500 mt-4 max-w-md">
+            <p className="text-element-charcoal/70 mt-4 max-w-md">
               Sacramento Housing and Redevelopment Agency's official platform for rent reasonableness determination and analysis.
             </p>
+            <div className="flex items-center mt-6 space-x-4">
+              <a href="#" className="text-element-charcoal/60 hover:text-element-orange transition-colors">
+                <Twitter size={20} />
+              </a>
+              <a href="#" className="text-element-charcoal/60 hover:text-element-orange transition-colors">
+                <Facebook size={20} />
+              </a>
+              <a href="#" className="text-element-charcoal/60 hover:text-element-orange transition-colors">
+                <Instagram size={20} />
+              </a>
+              <a href="#" className="text-element-charcoal/60 hover:text-element-orange transition-colors">
+                <Linkedin size={20} />
+              </a>
+            </div>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+          {/* Quick Links */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-12 md:w-2/3">
             <div>
-              <h3 className="font-bold text-capitol-charcoal mb-4">Platform</h3>
-              <ul className="space-y-2">
-                <li><Link to="/login" className="text-gray-600 hover:text-capitol-orange">Login</Link></li>
-                <li><Link to="/login?tab=signup" className="text-gray-600 hover:text-capitol-orange">Sign Up</Link></li>
+              <h3 className="font-bold text-element-navy mb-4">Platform</h3>
+              <ul className="space-y-3">
+                <li><Link to="/login" className="text-element-charcoal/70 hover:text-element-orange">Login</Link></li>
+                <li><Link to="/login?tab=signup" className="text-element-charcoal/70 hover:text-element-orange">Sign Up</Link></li>
+                <li><a href="#" className="text-element-charcoal/70 hover:text-element-orange">Pricing</a></li>
+                <li><a href="#" className="text-element-charcoal/70 hover:text-element-orange">Features</a></li>
               </ul>
             </div>
             <div>
-              <h3 className="font-bold text-capitol-charcoal mb-4">Resources</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-gray-600 hover:text-capitol-orange">Documentation</a></li>
-                <li><a href="#" className="text-gray-600 hover:text-capitol-orange">Help Center</a></li>
+              <h3 className="font-bold text-element-navy mb-4">Resources</h3>
+              <ul className="space-y-3">
+                <li><a href="#" className="text-element-charcoal/70 hover:text-element-orange">Documentation</a></li>
+                <li><a href="#" className="text-element-charcoal/70 hover:text-element-orange">Help Center</a></li>
+                <li><a href="#" className="text-element-charcoal/70 hover:text-element-orange">API Access</a></li>
+                <li><a href="#" className="text-element-charcoal/70 hover:text-element-orange">Community</a></li>
               </ul>
             </div>
             <div>
-              <h3 className="font-bold text-capitol-charcoal mb-4">Legal</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-gray-600 hover:text-capitol-orange">Privacy Policy</a></li>
-                <li><a href="#" className="text-gray-600 hover:text-capitol-orange">Terms of Service</a></li>
+              <h3 className="font-bold text-element-navy mb-4">Contact</h3>
+              <ul className="space-y-3">
+                <li className="flex items-center">
+                  <Mail size={16} className="mr-2 text-element-orange" />
+                  <a href="mailto:info@shra.org" className="text-element-charcoal/70 hover:text-element-orange">info@shra.org</a>
+                </li>
+                <li className="flex items-center">
+                  <Phone size={16} className="mr-2 text-element-orange" />
+                  <a href="tel:+19165526000" className="text-element-charcoal/70 hover:text-element-orange">(916) 552-6000</a>
+                </li>
+                <li className="flex items-start">
+                  <MapPin size={16} className="mr-2 text-element-orange mt-1 flex-shrink-0" />
+                  <span className="text-element-charcoal/70">801 12th Street, Sacramento, CA 95814</span>
+                </li>
               </ul>
             </div>
           </div>
         </div>
         
-        <div className="pt-8 border-t border-gray-200 text-center text-gray-500 text-sm">
-          <p>© 2025 Sacramento Housing &amp; Redevelopment Agency. All rights reserved.</p>
-          <p className="mt-2">Designed and developed by CAPITOL codesign.</p>
+        {/* Newsletter Subscription */}
+        <div className="py-8 border-t border-b border-gray-200 mb-8">
+          <div className="max-w-2xl mx-auto text-center">
+            <h3 className="font-bold text-element-navy text-xl mb-3">Subscribe to our newsletter</h3>
+            <p className="text-element-charcoal/70 mb-6">
+              Stay updated with the latest features, news, and housing market trends.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input 
+                type="email" 
+                placeholder="Enter your email" 
+                className="px-4 py-3 rounded-md border border-gray-200 flex-grow focus:outline-none focus:ring-2 focus:ring-element-orange focus:border-transparent"
+              />
+              <button className="bg-element-orange hover:bg-element-orange/90 text-white font-medium px-6 py-3 rounded-md transition-colors whitespace-nowrap">
+                Subscribe
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Bottom Footer */}
+        <div className="flex flex-col md:flex-row justify-between items-center text-element-charcoal/70 text-sm">
+          <p>© 2025 Sacramento Housing & Redevelopment Agency. All rights reserved.</p>
+          <div className="flex space-x-6 mt-4 md:mt-0">
+            <a href="#" className="hover:text-element-orange">Privacy Policy</a>
+            <a href="#" className="hover:text-element-orange">Terms of Service</a>
+            <a href="#" className="hover:text-element-orange">Accessibility</a>
+          </div>
         </div>
       </div>
     </footer>

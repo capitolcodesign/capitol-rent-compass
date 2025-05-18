@@ -8,6 +8,9 @@ import HeroSection from '@/components/landing/HeroSection';
 import FeaturesSection from '@/components/landing/FeaturesSection';
 import TestimonialsSection from '@/components/landing/TestimonialsSection';
 import FooterSection from '@/components/landing/FooterSection';
+import HowItWorksSection from '@/components/landing/HowItWorksSection';
+import PartnerSection from '@/components/landing/PartnerSection';
+import StatSection from '@/components/landing/StatSection';
 import { useAuth } from '@/contexts/AuthContext';
 
 const LandingPage: React.FC = () => {
@@ -24,10 +27,10 @@ const LandingPage: React.FC = () => {
   // Show loading state while auth is determining
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-capitol-cream">
+      <div className="flex items-center justify-center h-screen bg-white">
         <div className="text-center">
           <Logo size="lg" />
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent align-[-0.125em] mt-6"></div>
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-element-orange border-r-transparent align-[-0.125em] mt-6"></div>
         </div>
       </div>
     );
@@ -39,30 +42,41 @@ const LandingPage: React.FC = () => {
   }
   
   return (
-    <div className="min-h-screen bg-capitol-cream">
+    <div className="min-h-screen bg-white">
       {/* Navigation */}
-      <nav className="container mx-auto px-6 py-6 flex justify-between items-center">
-        <Logo size="lg" />
-        <div className="flex items-center space-x-4">
-          <Link 
-            to="/login" 
-            className="text-capitol-charcoal hover:text-capitol-orange transition-colors"
-          >
-            Log in
-          </Link>
-          <Link to="/login?tab=signup">
-            <Button size="sm">
-              Sign up <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
-          </Link>
+      <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+          <Logo size="md" />
+          <div className="hidden md:flex items-center space-x-8">
+            <Link to="#" className="text-element-charcoal hover:text-element-orange transition-colors">Home</Link>
+            <Link to="#" className="text-element-charcoal hover:text-element-orange transition-colors">Features</Link>
+            <Link to="#" className="text-element-charcoal hover:text-element-orange transition-colors">About</Link>
+            <Link to="#" className="text-element-charcoal hover:text-element-orange transition-colors">Contact</Link>
+          </div>
+          <div className="flex items-center space-x-4">
+            <Link 
+              to="/login" 
+              className="text-element-charcoal hover:text-element-orange transition-colors hidden md:block"
+            >
+              Log in
+            </Link>
+            <Link to="/login?tab=signup">
+              <Button size="sm" className="bg-element-orange hover:bg-element-orange/90 text-white">
+                Sign up <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </nav>
 
       {/* Main Content */}
       <main>
         <HeroSection />
+        <StatSection />
         <FeaturesSection />
+        <HowItWorksSection />
         <TestimonialsSection />
+        <PartnerSection />
       </main>
 
       {/* Footer */}
