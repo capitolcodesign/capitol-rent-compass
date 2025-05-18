@@ -75,6 +75,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
       
+      // If no profile exists yet but we have a user, create a minimal profile
+      if (userId && session?.user) {
+        console.log("Creating minimal profile for user:", userId);
+        return {
+          id: userId,
+          email: session?.user?.email || '',
+          firstName: session?.user?.user_metadata?.first_name || '',
+          lastName: session?.user?.user_metadata?.last_name || '',
+          role: 'staff' // Default role
+        };
+      }
+      
       return null;
     } catch (error) {
       console.error('Error fetching user profile:', error);
@@ -93,11 +105,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
         console.log('Auth state changed:', event, currentSession?.user?.id);
+        
+        // Update the session immediately
         setSession(currentSession);
         
         if (currentSession?.user) {
-          // Don't call Supabase methods directly inside the callback
-          // Use setTimeout to prevent potential deadlocks
+          // Use setTimeout to prevent potential deadlocks with Supabase client
           setTimeout(async () => {
             const profile = await fetchUserProfile(currentSession.user.id);
             setUser(profile);
@@ -238,6 +251,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Logout error:', error);
     }
   };
+
+  console.log("Auth provider state:", { user, isAuthenticated: !!user, session });
   
   return (
     <AuthContext.Provider value={{ 

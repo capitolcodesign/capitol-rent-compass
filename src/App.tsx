@@ -1,8 +1,9 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import MainLayout from "./components/MainLayout";
 import Login from "./pages/Login";
@@ -27,7 +28,10 @@ const queryClient = new QueryClient({
 
 // Protected Route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, session } = useAuth();
+  
+  // Add debug information
+  console.log("ProtectedRoute check:", { isAuthenticated, isLoading, session });
   
   if (isLoading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
@@ -38,14 +42,22 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/login" replace />;
   }
   
+  console.log("User is authenticated, rendering protected content");
   return <>{children}</>;
 };
 
 // We're keeping the routes logic in a separate component that is rendered INSIDE the AuthProvider
 const AppRoutes = () => {
+  const { isAuthenticated } = useAuth();
+  
+  // Debug information
+  console.log("AppRoutes auth state:", { isAuthenticated });
+  
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={
+        isAuthenticated ? <Navigate to="/" replace /> : <Login />
+      } />
       <Route path="/sample-users" element={<SampleUsersCreator />} />
       
       <Route path="/" element={

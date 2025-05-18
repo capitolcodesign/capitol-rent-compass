@@ -58,7 +58,7 @@ const Login: React.FC = () => {
     // If user is authenticated, redirect to dashboard
     if (isAuthenticated && session) {
       console.log("User authenticated, redirecting to dashboard");
-      navigate('/');
+      navigate('/', { replace: true });
     }
   }, [isAuthenticated, session, navigate]);
   
@@ -81,6 +81,9 @@ const Login: React.FC = () => {
       console.error('Signup error:', error);
     }
   };
+  
+  // Add console log to debug authentication state
+  console.log("Auth state:", { isAuthenticated, session, user: session?.user });
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-capitol-cream p-4">
