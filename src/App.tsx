@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -30,6 +29,7 @@ import Community from "./pages/Community";
 import HudGuidelines from "./pages/documentation/HudGuidelines";
 import ShraProcedures from "./pages/documentation/ShraProcedures";
 import QuickStart from "./pages/documentation/QuickStart";
+import RentalFairness from "./pages/RentalFairness";
 
 // Create a QueryClient for React Query
 const queryClient = new QueryClient({
@@ -135,6 +135,15 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <MainLayout>
             <RentAnalysis />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      {/* New Rental Fairness route */}
+      <Route path="/rental-fairness" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <RentalFairness />
           </MainLayout>
         </ProtectedRoute>
       } />

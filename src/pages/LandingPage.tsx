@@ -52,6 +52,7 @@ const LandingPage: React.FC = () => {
             <Link to="/features" className="text-element-charcoal hover:text-element-orange transition-colors">Features</Link>
             <Link to="/about" className="text-element-charcoal hover:text-element-orange transition-colors">About</Link>
             <Link to="/contact" className="text-element-charcoal hover:text-element-orange transition-colors">Contact</Link>
+            <Link to="/rental-fairness" className="text-element-charcoal hover:text-element-orange transition-colors">Rental Fairness</Link>
           </div>
           <div className="flex items-center space-x-4">
             <Link 
