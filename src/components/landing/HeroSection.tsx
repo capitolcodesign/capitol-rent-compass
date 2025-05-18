@@ -52,11 +52,7 @@ const HeroSection: React.FC = () => {
               opacity: 0.8
             }} />
               <div className="absolute inset-0 flex items-center justify-center">
-                <Button size="lg" className="bg-element-orange hover:bg-element-orange/90 text-white rounded-full w-16 h-16 flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                  </svg>
-                </Button>
+                
               </div>
             </div>
             <div className="mt-6 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl p-6 shadow-lg">
