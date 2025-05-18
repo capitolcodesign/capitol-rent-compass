@@ -118,6 +118,12 @@ const RentAnalysis: React.FC = () => {
     form.reset();
     setStep(1);
   };
+
+  // Function to handle the button click that completes the analysis
+  const handleCompleteAnalysis = () => {
+    const formData = form.getValues();
+    onSubmit(formData);
+  };
   
   const handleAddressSelect = (address: any) => {
     form.setValue('address', address.full);
@@ -508,7 +514,7 @@ const RentAnalysis: React.FC = () => {
               <FileText className="h-4 w-4 mr-2" />
               Save as Report
             </Button>
-            <Button onClick={onSubmit}>
+            <Button onClick={handleCompleteAnalysis}>
               Complete Analysis
             </Button>
           </div>
