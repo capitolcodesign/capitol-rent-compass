@@ -3,7 +3,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
-import { AlertTriangle, Settings as SettingsIcon } from 'lucide-react';
+import { AlertTriangle, Settings as SettingsIcon, Link } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ThemeCustomizer } from '@/components/admin/ThemeCustomizer';
 import { GeneralSettings } from '@/components/settings/GeneralSettings';
@@ -11,6 +11,7 @@ import { AccessSettings } from '@/components/settings/AccessSettings';
 import { PropertySettings } from '@/components/settings/PropertySettings';
 import { ReportSettings } from '@/components/settings/ReportSettings';
 import { User, UserRole } from '@/contexts/auth/types';
+import IntegrationSettings from '@/components/settings/IntegrationSettings';
 
 // Create an extended User interface for display purposes
 interface UserDisplay extends User {
@@ -84,6 +85,28 @@ const Settings: React.FC = () => {
     enabled: isAdmin,
   });
   
+  // Fetch API integrations
+  const { data: integrations, isLoading: isLoadingIntegrations, refetch: refetchIntegrations } = useQuery({
+    queryKey: ['api_integrations'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('app_settings')
+        .select('key, value')
+        .like('key', '%_api_key');
+      
+      if (error) throw error;
+      
+      // Convert array to object for easier access
+      const integrations: Record<string, string> = {};
+      data?.forEach(item => {
+        integrations[item.key] = item.value;
+      });
+      
+      return integrations;
+    },
+    enabled: isAdmin,
+  });
+  
   if (!isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center h-96">
@@ -109,9 +132,10 @@ const Settings: React.FC = () => {
       </div>
       
       <Tabs defaultValue="general" className="mb-6">
-        <TabsList className="grid grid-cols-5 w-full max-w-3xl">
+        <TabsList className="grid grid-cols-6 w-full max-w-4xl">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="access">Access</TabsTrigger>
+          <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="theme">Theme</TabsTrigger>
           <TabsTrigger value="properties">Properties</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
@@ -130,6 +154,15 @@ const Settings: React.FC = () => {
             users={users} 
             isLoading={isLoadingUsers} 
             refetchUsers={refetchUsers} 
+          />
+        </TabsContent>
+
+        <TabsContent value="integrations" className="pt-6">
+          <IntegrationSettings
+            user={user}
+            integrations={integrations}
+            refetchIntegrations={refetchIntegrations}
+            isLoading={isLoadingIntegrations}
           />
         </TabsContent>
         

@@ -2,11 +2,11 @@
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { PropertyDetails } from "@/types/rental-fairness";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import AddressAutocomplete from '@/components/AddressAutocomplete';
 
 interface PropertyDetailsFormProps {
   propertyDetails: PropertyDetails;
@@ -70,6 +70,22 @@ const PropertyDetailsForm: React.FC<PropertyDetailsFormProps> = ({
     }
   };
 
+  const handleAddressSelect = (address: any) => {
+    setPropertyDetails((prev) => ({
+      ...prev,
+      location: address.full,
+      // You can also store these separately if needed
+      locationDetails: {
+        street: address.street,
+        city: address.city,
+        state: address.state,
+        zip: address.zip,
+        lat: address.lat,
+        lng: address.lng
+      }
+    }));
+  };
+
   return (
     <Card>
       <CardContent className="pt-6 space-y-4">
@@ -131,12 +147,10 @@ const PropertyDetailsForm: React.FC<PropertyDetailsFormProps> = ({
 
         <div className="space-y-2">
           <Label htmlFor="location">Location</Label>
-          <Input
-            id="location"
-            name="location"
-            value={propertyDetails.location}
-            onChange={handleInputChange}
-            placeholder="123 Main St, Sacramento, CA 95811"
+          <AddressAutocomplete
+            onAddressSelect={handleAddressSelect}
+            defaultValue={propertyDetails.location}
+            placeholder="Enter property address"
           />
         </div>
 

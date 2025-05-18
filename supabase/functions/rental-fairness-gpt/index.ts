@@ -14,6 +14,14 @@ interface FairnessEvalRequest {
     bedrooms: number;
     bathrooms: number;
     location: string;
+    locationDetails?: {
+      street: string;
+      city: string;
+      state: string;
+      zip: string;
+      lat: number;
+      lng: number;
+    };
     amenities: string[];
     condition: string;
   };
@@ -31,6 +39,8 @@ interface FairnessEvalRequest {
       squareFeet: number;
       bedrooms: number;
       bathrooms: number;
+      distance?: number;
+      address?: string;
     }>;
   };
 }
@@ -44,7 +54,31 @@ serve(async (req) => {
   try {
     const { propertyDetails, metrics, marketData }: FairnessEvalRequest = await req.json();
 
-    // Structure the prompt for the AI
+    // Check for required API key
+    const openAiApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openAiApiKey) {
+      return new Response(
+        JSON.stringify({ 
+          error: "OpenAI API key is not configured. Please add it to your project settings." 
+        }),
+        { 
+          status: 400, 
+          headers: { "Content-Type": "application/json", ...corsHeaders } 
+        }
+      );
+    }
+
+    // Enhanced location data
+    const locationDetails = propertyDetails.locationDetails || {
+      street: '',
+      city: '',
+      state: '',
+      zip: '',
+      lat: 0,
+      lng: 0
+    };
+
+    // Structure the prompt for the AI with enhanced location data
     const prompt = `
       I want you to act as a rental property fairness evaluator. I will provide details about a rental property and you'll evaluate if the rent is fair based on the following metrics:
       
@@ -53,7 +87,13 @@ serve(async (req) => {
       - Square Footage: ${propertyDetails.squareFeet} sq ft
       - Bedrooms: ${propertyDetails.bedrooms}
       - Bathrooms: ${propertyDetails.bathrooms}
-      - Location: ${propertyDetails.location}
+      - Address: ${propertyDetails.location}
+      - Location Details:
+        * Street: ${locationDetails.street}
+        * City: ${locationDetails.city}
+        * State: ${locationDetails.state}
+        * Zip: ${locationDetails.zip}
+        * Coordinates: ${locationDetails.lat}, ${locationDetails.lng}
       - Amenities: ${propertyDetails.amenities.join(", ")}
       - Property Condition: ${propertyDetails.condition}
       
@@ -67,10 +107,10 @@ serve(async (req) => {
       ${marketData ? `
       MARKET DATA:
       - Average Rent in Area: $${marketData.averageRent}
-      ${marketData.comparableProperties ? `
+      ${marketData.comparableProperties && marketData.comparableProperties.length > 0 ? `
       - Comparable Properties:
         ${marketData.comparableProperties.map((prop, i) => 
-          `  ${i+1}. $${prop.rent}/month, ${prop.squareFeet} sq ft, ${prop.bedrooms}bd/${prop.bathrooms}ba`
+          `  ${i+1}. $${prop.rent}/month, ${prop.squareFeet} sq ft, ${prop.bedrooms}bd/${prop.bathrooms}ba${prop.distance ? `, ${prop.distance} miles away` : ''}${prop.address ? `, at ${prop.address}` : ''}`
         ).join('\n')}
       ` : ''}
       ` : ''}
@@ -81,14 +121,14 @@ serve(async (req) => {
       3. Recommendations to make the rent more fair if needed
       4. A price range that would be considered fair for this property
       
-      Format your response as a JSON object with these keys: fairnessScore, analysis, recommendations, fairPriceRange (with min and max values), and a summary.
+      Format your response as a JSON object with these keys: fairnessScore, analysis, recommendations (as an array), fairPriceRange (with min and max values), and a summary.
     `;
 
     // Make API call to OpenAI
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${Deno.env.get("OPENAI_API_KEY")}`,
+        Authorization: `Bearer ${openAiApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
