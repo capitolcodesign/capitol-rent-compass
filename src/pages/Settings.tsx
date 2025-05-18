@@ -11,7 +11,6 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { TimePickerDemo } from '@/components/ui/time-picker-demo'; 
 import {
   Card,
   CardContent,
@@ -21,7 +20,18 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 
-import { Settings as SettingsIcon, Save, AlertTriangle } from 'lucide-react';
+import { 
+  Settings as SettingsIcon, 
+  Save, 
+  AlertTriangle, 
+  Users, 
+  Palette,
+  Building, 
+  Trash2
+} from 'lucide-react';
+import { ThemeCustomizer } from '@/components/admin/ThemeCustomizer';
+import { UserRoleManagement } from '@/components/admin/UserRoleManagement';
+import { ConfirmActionDialog } from '@/components/admin/ConfirmActionDialog';
 
 const Settings: React.FC = () => {
   const { toast } = useToast();
@@ -36,8 +46,13 @@ const Settings: React.FC = () => {
   const [maintenanceMessage, setMaintenanceMessage] = useState('System under maintenance. Please check back later.');
   const [footerText, setFooterText] = useState('SHRA Rent Reasonableness System Report');
   
+  // State for property management
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
+  const [isDeletePropertyDialogOpen, setIsDeletePropertyDialogOpen] = useState(false);
+  const [isDeletingProperty, setIsDeletingProperty] = useState(false);
+  
   // Fetch app settings from Supabase
-  const { data: appSettings, isLoading: isLoadingSettings, error: settingsError } = useQuery({
+  const { data: appSettings, isLoading: isLoadingSettings, error: settingsError, refetch: refetchSettings } = useQuery({
     queryKey: ['app_settings'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -69,6 +84,43 @@ const Settings: React.FC = () => {
       
       return settings;
     }
+  });
+  
+  // Fetch properties for property management
+  const { data: properties, isLoading: isLoadingProperties, refetch: refetchProperties } = useQuery({
+    queryKey: ['properties_admin'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('properties')
+        .select('id, name, address, type, units');
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: isAdmin,
+  });
+  
+  // Fetch users for user management
+  const { data: users, isLoading: isLoadingUsers, refetch: refetchUsers } = useQuery({
+    queryKey: ['users_admin'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*');
+      
+      if (error) throw error;
+      
+      // Convert to User type
+      return data?.map(profile => ({
+        id: profile.id,
+        email: `user-${profile.id.substring(0, 8)}@example.com`, // Placeholder
+        firstName: profile.first_name || '',
+        lastName: profile.last_name || '',
+        role: profile.role || 'staff',
+        created_at: profile.created_at
+      })) || [];
+    },
+    enabled: isAdmin,
   });
   
   // Show error if fetch fails
@@ -143,6 +195,38 @@ const Settings: React.FC = () => {
     }
   };
   
+  const handleDeleteProperty = async () => {
+    if (!selectedPropertyId) return;
+    
+    setIsDeletingProperty(true);
+    try {
+      const { error } = await supabase
+        .from('properties')
+        .delete()
+        .eq('id', selectedPropertyId);
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Property Deleted",
+        description: "The property has been successfully deleted.",
+      });
+      
+      refetchProperties();
+    } catch (error) {
+      console.error('Error deleting property:', error);
+      toast({
+        title: "Delete Failed",
+        description: `Failed to delete property: ${(error as Error).message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeletingProperty(false);
+      setIsDeletePropertyDialogOpen(false);
+      setSelectedPropertyId(null);
+    }
+  };
+  
   if (!isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center h-96">
@@ -168,9 +252,11 @@ const Settings: React.FC = () => {
       </div>
       
       <Tabs defaultValue="general" className="mb-6">
-        <TabsList className="grid grid-cols-3 w-full max-w-md">
+        <TabsList className="grid grid-cols-5 w-full max-w-3xl">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="access">Access</TabsTrigger>
+          <TabsTrigger value="theme">Theme</TabsTrigger>
+          <TabsTrigger value="properties">Properties</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
         
@@ -269,22 +355,116 @@ const Settings: React.FC = () => {
         <TabsContent value="access" className="pt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Access Control</CardTitle>
+              <CardTitle className="flex items-center">
+                <Users className="mr-2 h-5 w-5" />
+                User Management
+              </CardTitle>
               <CardDescription>
-                Manage access permissions and restrictions
+                Manage user permissions and roles
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="mb-4">User permissions are managed through the User Management section.</p>
-              
-              <Button variant="secondary" disabled>
-                Configure Role Permissions
-              </Button>
-              <p className="text-sm text-muted-foreground mt-2">
-                Custom role permissions will be available in future updates.
-              </p>
+              {isLoadingUsers ? (
+                <div className="flex justify-center p-6">
+                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent align-[-0.125em]"></div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {users && users.length > 0 ? (
+                    users.map(userItem => (
+                      <div key={userItem.id} className="p-4 border rounded-lg">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                          <div>
+                            <h3 className="text-lg font-medium">{userItem.firstName} {userItem.lastName}</h3>
+                            <p className="text-sm text-muted-foreground">{userItem.email}</p>
+                          </div>
+                        </div>
+                        
+                        <UserRoleManagement 
+                          user={userItem} 
+                          onUpdate={refetchUsers}
+                        />
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-muted-foreground text-center py-6">
+                      No users found. Add users to manage their roles.
+                    </p>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="theme" className="pt-6">
+          <ThemeCustomizer />
+        </TabsContent>
+        
+        <TabsContent value="properties" className="pt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Building className="mr-2 h-5 w-5" />
+                Property Management
+              </CardTitle>
+              <CardDescription>
+                Manage property listings in the database
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingProperties ? (
+                <div className="flex justify-center p-6">
+                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent align-[-0.125em]"></div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {properties && properties.length > 0 ? (
+                    properties.map(property => (
+                      <div key={property.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <h3 className="font-medium">{property.name}</h3>
+                          <p className="text-sm text-muted-foreground">{property.address}</p>
+                          <div className="flex gap-2 mt-1">
+                            <span className="text-xs bg-muted px-2 py-1 rounded-md">{property.type}</span>
+                            <span className="text-xs bg-muted px-2 py-1 rounded-md">{property.units} units</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="danger"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedPropertyId(property.id);
+                              setIsDeletePropertyDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only md:not-sr-only md:ml-2">Delete</span>
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-muted-foreground text-center py-6">
+                      No properties found.
+                    </p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          
+          <ConfirmActionDialog
+            open={isDeletePropertyDialogOpen}
+            onClose={() => setIsDeletePropertyDialogOpen(false)}
+            onConfirm={handleDeleteProperty}
+            title="Delete Property"
+            description="Are you sure you want to delete this property? This action cannot be undone and will remove all data associated with this property."
+            confirmLabel="Delete Property"
+            variant="destructive"
+            loading={isDeletingProperty}
+          />
         </TabsContent>
         
         <TabsContent value="reports" className="pt-6">
@@ -319,7 +499,7 @@ const Settings: React.FC = () => {
                     />
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Logo management will be available in future updates.
+                    Logo management is available in the Theme tab.
                   </p>
                 </div>
               </div>
