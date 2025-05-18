@@ -22,6 +22,13 @@ import SampleUsersCreator from "./pages/SampleUsersCreator";
 import Features from "./pages/Features";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Documentation from "./pages/Documentation";
+import HelpCenter from "./pages/HelpCenter";
+import ApiAccess from "./pages/ApiAccess";
+import Community from "./pages/Community";
+import HudGuidelines from "./pages/documentation/HudGuidelines";
+import ShraProcedures from "./pages/documentation/ShraProcedures";
+import QuickStart from "./pages/documentation/QuickStart";
 
 // Create a QueryClient for React Query
 const queryClient = new QueryClient({
@@ -67,6 +74,15 @@ const AppRoutes = () => {
       <Route path="/features" element={<Features />} />
       <Route path="/about" element={<About />} />
       <Route path="/contact" element={<Contact />} />
+      
+      {/* Documentation and Resource pages */}
+      <Route path="/documentation" element={<Documentation />} />
+      <Route path="/documentation/hud-guidelines" element={<HudGuidelines />} />
+      <Route path="/documentation/shra-procedures" element={<ShraProcedures />} />
+      <Route path="/documentation/quick-start" element={<QuickStart />} />
+      <Route path="/help-center" element={<HelpCenter />} />
+      <Route path="/api-access" element={<ApiAccess />} />
+      <Route path="/community" element={<Community />} />
       
       <Route path="/login" element={
         isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />

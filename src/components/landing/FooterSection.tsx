@@ -40,16 +40,16 @@ const FooterSection: React.FC = () => {
                 <li><Link to="/login" className="text-element-charcoal/70 hover:text-element-orange">Login</Link></li>
                 <li><Link to="/login?tab=signup" className="text-element-charcoal/70 hover:text-element-orange">Sign Up</Link></li>
                 <li><a href="#" className="text-element-charcoal/70 hover:text-element-orange">Pricing</a></li>
-                <li><a href="#" className="text-element-charcoal/70 hover:text-element-orange">Features</a></li>
+                <li><Link to="/features" className="text-element-charcoal/70 hover:text-element-orange">Features</Link></li>
               </ul>
             </div>
             <div>
               <h3 className="font-bold text-element-navy mb-4">Resources</h3>
               <ul className="space-y-3">
-                <li><a href="#" className="text-element-charcoal/70 hover:text-element-orange">Documentation</a></li>
-                <li><a href="#" className="text-element-charcoal/70 hover:text-element-orange">Help Center</a></li>
-                <li><a href="#" className="text-element-charcoal/70 hover:text-element-orange">API Access</a></li>
-                <li><a href="#" className="text-element-charcoal/70 hover:text-element-orange">Community</a></li>
+                <li><Link to="/documentation" className="text-element-charcoal/70 hover:text-element-orange">Documentation</Link></li>
+                <li><Link to="/help-center" className="text-element-charcoal/70 hover:text-element-orange">Help Center</Link></li>
+                <li><Link to="/api-access" className="text-element-charcoal/70 hover:text-element-orange">API Access</Link></li>
+                <li><Link to="/community" className="text-element-charcoal/70 hover:text-element-orange">Community</Link></li>
               </ul>
             </div>
             <div>
