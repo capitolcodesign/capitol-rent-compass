@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Tag, TagsIcon, Check } from 'lucide-react';
 
@@ -69,7 +68,7 @@ const PropertyAmenitiesTags: React.FC<PropertyAmenitiesTagsProps> = ({ propertyI
   });
 
   // Fetch all available property tags
-  const { data: allTags, isLoading: isLoadingAllTags } = useQuery({
+  const { data: availableTags, isLoading: isLoadingAllTags } = useQuery({
     queryKey: ['property-tags'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -156,7 +155,7 @@ const PropertyAmenitiesTags: React.FC<PropertyAmenitiesTagsProps> = ({ propertyI
       if (isChecked) {
         // Check if tag exists, if not create it
         let tagId;
-        const matchingTag = allTags?.find(t => t.name === tagName);
+        const matchingTag = availableTags?.find(t => t.name === tagName);
         
         if (!matchingTag) {
           const { data: newTag, error: createError } = await supabase
@@ -187,7 +186,7 @@ const PropertyAmenitiesTags: React.FC<PropertyAmenitiesTagsProps> = ({ propertyI
         });
       } else {
         // Find the tag ID
-        const matchingTag = allTags?.find(t => t.name === tagName);
+        const matchingTag = availableTags?.find(t => t.name === tagName);
         
         if (matchingTag?.id) {
           const { error } = await supabase
@@ -242,20 +241,20 @@ const PropertyAmenitiesTags: React.FC<PropertyAmenitiesTagsProps> = ({ propertyI
   };
 
   // Get flat list of all available tags
-  const getAllTags = () => {
+  const getAllTagNames = () => {
     // Start with common tags
-    const allTagNames = [...COMMON_TAGS];
+    const tagNames = [...COMMON_TAGS];
     
     // Add any existing tags from the database
-    if (allTags) {
-      allTags.forEach(tag => {
-        if (!allTagNames.includes(tag.name)) {
-          allTagNames.push(tag.name);
+    if (availableTags) {
+      availableTags.forEach(tag => {
+        if (!tagNames.includes(tag.name)) {
+          tagNames.push(tag.name);
         }
       });
     }
     
-    return allTagNames.sort();
+    return tagNames.sort();
   };
 
   // Check if amenity is selected
@@ -288,7 +287,7 @@ const PropertyAmenitiesTags: React.FC<PropertyAmenitiesTagsProps> = ({ propertyI
   }
 
   const groupedAmenities = groupAmenitiesByCategory();
-  const allTags = getAllTags();
+  const tagNames = getAllTagNames();
 
   return (
     <div className="space-y-6">
@@ -344,7 +343,7 @@ const PropertyAmenitiesTags: React.FC<PropertyAmenitiesTagsProps> = ({ propertyI
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            {allTags.map((tagName) => {
+            {tagNames.map((tagName) => {
               const selected = isTagSelected(tagName);
               return (
                 <div key={tagName} className="flex items-center">
