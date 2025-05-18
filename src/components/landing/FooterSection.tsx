@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Logo from '@/components/Logo';
-import { Twitter, Facebook, Instagram, Linkedin, GitHub, Mail, Phone, MapPin } from 'lucide-react';
+import { Twitter, Facebook, Instagram, Linkedin, Github, Mail, Phone, MapPin } from 'lucide-react';
 
 const FooterSection: React.FC = () => {
   return (
