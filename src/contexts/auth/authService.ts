@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { AuthResponse } from './types';
@@ -117,9 +118,9 @@ export const adminCreateUser = async (
   role: string
 ): Promise<any> => {
   try {
-    console.log("Creating user with role:", role);
+    console.log(`Creating new user (${email}, role: ${role})`);
     
-    // Use the regular signup method since we don't have admin access
+    // Use the standard signup method since the admin API requires additional permissions
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -133,6 +134,7 @@ export const adminCreateUser = async (
     });
 
     if (error) {
+      console.error("User creation failed:", error);
       toast({
         title: 'User Creation Failed',
         description: error.message,
@@ -141,47 +143,41 @@ export const adminCreateUser = async (
       throw error;
     }
 
-    // Manually create profile after user creation
-    if (data.user) {
-      try {
-        // First check if profile already exists
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', data.user.id)
-          .maybeSingle();
-        
-        // Only create profile if one doesn't exist
-        if (!existingProfile) {
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              id: data.user.id,
-              first_name: firstName,
-              last_name: lastName,
-              role
-            });
-            
-          if (profileError) {
-            console.error('Error creating profile:', profileError);
-            toast({
-              title: 'Warning',
-              description: 'User created but profile setup failed',
-              variant: 'destructive',
-            });
-          } else {
-            console.log("Profile created successfully for:", email);
-          }
-        }
-      } catch (profileErr) {
-        console.error('Profile creation error:', profileErr);
-      }
-    }
+    console.log("Auth signup successful, creating profile...");
 
-    toast({
-      title: 'User Created',
-      description: `Successfully added user: ${email}`,
-    });
+    // Directly create a profile entry
+    if (data?.user) {
+      const profileData = {
+        id: data.user.id,
+        first_name: firstName,
+        last_name: lastName,
+        role: role
+      };
+      
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert(profileData, { 
+          onConflict: 'id',
+          ignoreDuplicates: false
+        });
+        
+      if (profileError) {
+        console.error('Error creating/updating profile:', profileError);
+        toast({
+          title: 'Profile Creation Error',
+          description: 'User was created but profile setup failed. Please try again.',
+          variant: 'destructive',
+        });
+      } else {
+        console.log("Profile created successfully for:", email);
+        toast({
+          title: 'User Created',
+          description: `Successfully added user: ${email}`,
+        });
+      }
+    } else {
+      throw new Error('User data not returned from signup');
+    }
 
     return data;
   } catch (error: any) {

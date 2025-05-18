@@ -68,14 +68,13 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
   const onSubmit = async (data: UserFormValues) => {
     setIsSubmitting(true);
     try {
-      console.log("Submitting user data:", {
+      console.log("Creating new user:", {
         email: data.email,
         firstName: data.firstName,
         lastName: data.lastName,
         role: data.role
       });
       
-      // Use the adminCreateUser function from our auth service
       await adminCreateUser(
         data.email,
         data.password,
@@ -91,6 +90,7 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
       onOpenChange(false);
     } catch (error: any) {
       console.error('Error creating user:', error);
+      // Toast is already shown in the adminCreateUser function
     } finally {
       setIsSubmitting(false);
     }
