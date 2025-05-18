@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/auth";
 import MainLayout from "./components/MainLayout";
 import LandingPage from "./pages/LandingPage";
@@ -30,32 +30,30 @@ const queryClient = new QueryClient({
   },
 });
 
-// Protected Route component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading, session } = useAuth();
-  
-  // Add debug information
-  console.log("ProtectedRoute check:", { isAuthenticated, isLoading, session: !!session });
-  
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
-  }
-  
-  if (!isAuthenticated) {
-    console.log("User not authenticated, redirecting to login");
-    return <Navigate to="/login" replace />;
-  }
-  
-  console.log("User is authenticated, rendering protected content");
-  return <>{children}</>;
-};
-
-// We're keeping the routes logic in a separate component that is rendered INSIDE the AuthProvider
+// Protected Route component - moved inside the AppRoutes component
 const AppRoutes = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   
   // Debug information
   console.log("AppRoutes auth state:", { isAuthenticated });
+  
+  // Protected Route component defined inside AppRoutes
+  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    // Add debug information
+    console.log("ProtectedRoute check:", { isAuthenticated, isLoading });
+    
+    if (isLoading) {
+      return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    }
+    
+    if (!isAuthenticated) {
+      console.log("User not authenticated, redirecting to login");
+      return <Navigate to="/login" replace />;
+    }
+    
+    console.log("User is authenticated, rendering protected content");
+    return <>{children}</>;
+  };
   
   return (
     <Routes>
@@ -75,6 +73,7 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       
+      {/* All other protected routes */}
       <Route path="/properties" element={
         <ProtectedRoute>
           <MainLayout>
@@ -145,17 +144,17 @@ const AppRoutes = () => {
   );
 };
 
-// The main App component wraps everything with the necessary providers
+// The main App component wraps everything with the necessary providers in the correct order
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+      <BrowserRouter>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
           <AppRoutes />
-        </BrowserRouter>
-      </AuthProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );
