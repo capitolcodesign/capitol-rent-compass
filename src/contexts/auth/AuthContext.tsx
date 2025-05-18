@@ -32,8 +32,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        console.log('Auth state changed:', event, currentSession?.user?.id);
+      (event, currentSession) => {
+        console.log('Auth state changed:', event, !!currentSession);
         
         // Update the session immediately
         setSession(currentSession);
@@ -45,6 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const profile = await fetchUserProfile(currentSession.user.id, currentSession);
               if (profile) {
                 setUser(profile);
+                console.log("User profile set:", profile.role);
               } else {
                 console.log("No profile returned, user may be null");
                 setUser(null);
@@ -65,13 +66,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Then check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      console.log('Initial session check:', currentSession?.user?.id);
+      console.log('Initial session check:', !!currentSession);
       setSession(currentSession);
       
       if (currentSession?.user) {
         fetchUserProfile(currentSession.user.id, currentSession).then(profile => {
           if (profile) {
             setUser(profile);
+            console.log("Initial profile loaded:", profile.role);
           }
           setIsLoading(false);
         }).catch(error => {
@@ -97,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       const result = await authLogin(email, password);
-      console.log("Login result:", result);
+      console.log("Login result:", !!result.session);
       return result;
     } finally {
       // Don't set loading to false here
@@ -127,13 +129,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  console.log("Auth provider state:", { user, isAuthenticated: !!user, session });
+  // Initialize isAuthenticated value here
+  const isAuthenticated = !!user && !!session;
+  
+  console.log("Auth provider state:", { user: !!user, isAuthenticated, session: !!session });
   
   return (
     <AuthContext.Provider value={{ 
       user, 
       isLoading, 
-      isAuthenticated: !!user,
+      isAuthenticated,
       login,
       signUp,
       logout,

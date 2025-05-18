@@ -31,7 +31,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading, session } = useAuth();
   
   // Add debug information
-  console.log("ProtectedRoute check:", { isAuthenticated, isLoading, session });
+  console.log("ProtectedRoute check:", { isAuthenticated, isLoading, session: !!session });
   
   if (isLoading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;

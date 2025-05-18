@@ -31,8 +31,39 @@ export const fetchUserProfile = async (userId: string, session: Session | null):
       };
     }
     
-    // If no metadata available, create minimal profile
-    console.log("No metadata available, creating minimal profile");
+    // If no metadata available, check database as fallback
+    console.log("No metadata in session, checking database");
+    const { data: profileData, error } = await supabase
+      .from('profiles')
+      .select('first_name, last_name, role')
+      .eq('id', userId)
+      .single();
+      
+    if (error) {
+      console.error("Error fetching from profiles:", error);
+      // Create minimal profile if database fetch fails
+      return {
+        id: userId,
+        email: session.user.email || '',
+        firstName: '',
+        lastName: '',
+        role: 'staff' as UserRole
+      };
+    }
+    
+    if (profileData) {
+      console.log("Profile data from database:", profileData);
+      return {
+        id: userId,
+        email: session.user.email || '',
+        firstName: profileData.first_name || '',
+        lastName: profileData.last_name || '',
+        role: (profileData.role as UserRole) || 'staff'
+      };
+    }
+    
+    // If no database record, create minimal profile
+    console.log("No profile found in database, creating minimal profile");
     return {
       id: userId,
       email: session.user.email || '',
@@ -43,6 +74,13 @@ export const fetchUserProfile = async (userId: string, session: Session | null):
     
   } catch (error) {
     console.error('Error fetching user profile:', error);
-    return null;
+    // Return minimal profile on error
+    return {
+      id: userId,
+      email: session.user?.email || '',
+      firstName: '',
+      lastName: '',
+      role: 'staff' as UserRole
+    };
   }
 };
