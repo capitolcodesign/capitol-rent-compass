@@ -37,7 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
@@ -79,7 +79,7 @@ const PropertyList: React.FC = () => {
   const isStaffOrAdmin = user?.role === 'admin' || user?.role === 'staff';
   
   // Fetch properties from Supabase
-  const { data: properties, isLoading: isLoadingProperties, error: propertiesError } = useQuery({
+  const { data: properties, isLoading: isLoadingProperties, error: propertiesError, refetch: refetchProperties } = useQuery({
     queryKey: ['properties'],
     queryFn: async () => {
       let query = supabase
@@ -195,6 +195,9 @@ const PropertyList: React.FC = () => {
                   <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="Multi-family">Multi-family</SelectItem>
                   <SelectItem value="Single-family">Single-family</SelectItem>
+                  <SelectItem value="Apartment">Apartment</SelectItem>
+                  <SelectItem value="Condo">Condo</SelectItem>
+                  <SelectItem value="Townhouse">Townhouse</SelectItem>
                 </SelectContent>
               </Select>
               
@@ -280,34 +283,61 @@ const PropertyList: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProperties.map((property) => (
-                <TableRow 
-                  key={property.id}
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => navigate(`/properties/${property.property_id}`)}
-                >
-                  <TableCell className="font-medium">{property.name}</TableCell>
-                  <TableCell>{property.address}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{property.type}</Badge>
-                  </TableCell>
-                  <TableCell>{property.units}</TableCell>
-                  <TableCell>{property.built_year}</TableCell>
-                  <TableCell>
-                    {property.last_analysis ? 
-                      new Date(property.last_analysis).toLocaleDateString() : 
-                      'Not analyzed'}
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="icon" onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/properties/${property.property_id}`);
-                    }}>
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
+              {filteredProperties.length > 0 ? (
+                filteredProperties.map((property) => (
+                  <TableRow 
+                    key={property.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => navigate(`/properties/${property.property_id}`)}
+                  >
+                    <TableCell className="font-medium">{property.name}</TableCell>
+                    <TableCell>{property.address}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{property.type}</Badge>
+                    </TableCell>
+                    <TableCell>{property.units}</TableCell>
+                    <TableCell>{property.built_year}</TableCell>
+                    <TableCell>
+                      {property.last_analysis ? 
+                        new Date(property.last_analysis).toLocaleDateString() : 
+                        'Not analyzed'}
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/properties/${property.property_id}`);
+                      }}>
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-10">
+                    <Building2 className="h-12 w-12 mx-auto text-muted-foreground/60 mb-4" />
+                    <p className="text-lg font-medium">No properties found</p>
+                    <p className="text-muted-foreground">
+                      {searchTerm || propertyType !== 'all' ? 
+                        'Try adjusting your search or filters' : 
+                        'Add your first property to get started'}
+                    </p>
+                    {isStaffOrAdmin && (searchTerm === '' && propertyType === 'all') && (
+                      <Button 
+                        variant="outline" 
+                        className="mt-4"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate('/properties/new');
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Property
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </Card>
@@ -316,48 +346,60 @@ const PropertyList: React.FC = () => {
       {/* Card view */}
       {!isLoadingProperties && viewMode === 'cards' && (
         <div className="grid gap-4">
-          {filteredProperties.map((property) => (
-            <Card key={property.id} className="hover:border-primary/50 cursor-pointer transition-colors" 
-                onClick={() => navigate(`/properties/${property.property_id}`)}>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-4">
-                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Building2 className="h-6 w-6 text-primary" />
-                    </div>
-                    
-                    <div>
-                      <h3 className="font-medium mb-1">{property.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-2">{property.address}</p>
-                      <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                        <span>ID: {property.property_id}</span>
-                        <span>•</span>
-                        <span>ZIP: {property.zip}</span>
-                        <span>•</span>
-                        <span>Built: {property.built_year}</span>
+          {filteredProperties.length > 0 ? (
+            filteredProperties.map((property) => (
+              <Card key={property.id} className="hover:border-primary/50 cursor-pointer transition-colors" 
+                  onClick={() => navigate(`/properties/${property.property_id}`)}>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start space-x-4">
+                      <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Building2 className="h-6 w-6 text-primary" />
+                      </div>
+                      
+                      <div>
+                        <h3 className="font-medium mb-1">{property.name}</h3>
+                        <p className="text-sm text-muted-foreground mb-2">{property.address}</p>
+                        <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                          <span>ID: {property.property_id}</span>
+                          <span>•</span>
+                          <span>ZIP: {property.zip}</span>
+                          <span>•</span>
+                          <span>Built: {property.built_year}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                      <Badge variant="outline">{property.type}</Badge>
-                      <div className="text-sm mt-1">{property.units} unit{property.units > 1 ? 's' : ''}</div>
+                    
+                    <div className="flex items-center space-x-4">
+                      <div className="text-right">
+                        <Badge variant="outline">{property.type}</Badge>
+                        <div className="text-sm mt-1">{property.units} unit{property.units > 1 ? 's' : ''}</div>
+                      </div>
+                      <ArrowRight className="h-5 w-5 text-muted-foreground" />
                     </div>
-                    <ArrowRight className="h-5 w-5 text-muted-foreground" />
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          
-          {filteredProperties.length === 0 && !isLoadingProperties && (
+                </CardContent>
+              </Card>
+            ))
+          ) : (
             <div className="text-center py-12">
               <Building2 className="h-12 w-12 mx-auto text-muted-foreground/60" />
               <h3 className="mt-4 text-lg font-medium">No properties found</h3>
               <p className="text-muted-foreground mt-1">
-                Try adjusting your search or filters
+                {searchTerm || propertyType !== 'all' ? 
+                  'Try adjusting your search or filters' : 
+                  'Add your first property to get started'}
               </p>
+              {isStaffOrAdmin && (searchTerm === '' && propertyType === 'all') && (
+                <Button 
+                  variant="outline" 
+                  className="mt-4"
+                  onClick={() => navigate('/properties/new')}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Property
+                </Button>
+              )}
             </div>
           )}
         </div>

@@ -1,6 +1,5 @@
-
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, Building2, MapPin, Calendar, Home, PenLine, Trash2, Tag, Image } from 'lucide-react';
@@ -9,7 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import { ConfirmActionDialog } from '@/components/admin/ConfirmActionDialog';
+import { useAuth } from '@/contexts/auth';
 
 interface PropertyDetail {
   id: string;
@@ -52,17 +53,35 @@ const PropertyDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
+  
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const { data: property, isLoading, error } = useQuery({
+  const { data: property, isLoading, error, refetch } = useQuery({
     queryKey: ['property', id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First try to fetch by property_id which is what we use in URLs
+      let { data, error } = await supabase
         .from('properties')
         .select('*')
-        .eq('id', id)
+        .eq('property_id', id)
         .single();
       
-      if (error) {
+      // If not found by property_id, try by UUID id
+      if (error && error.code === 'PGRST116') {
+        const { data: dataById, error: errorById } = await supabase
+          .from('properties')
+          .select('*')
+          .eq('id', id)
+          .single();
+        
+        if (errorById) {
+          throw new Error(errorById.message);
+        }
+        
+        data = dataById;
+      } else if (error) {
         throw new Error(error.message);
       }
       
@@ -71,12 +90,12 @@ const PropertyDetail = () => {
   });
 
   const { data: attributes } = useQuery({
-    queryKey: ['property-attributes', id],
+    queryKey: ['property-attributes', property?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('property_attributes')
         .select('*')
-        .eq('property_id', id);
+        .eq('property_id', property?.id);
       
       if (error) {
         throw new Error(error.message);
@@ -84,16 +103,16 @@ const PropertyDetail = () => {
       
       return data as PropertyAttribute[];
     },
-    enabled: !!id,
+    enabled: !!property?.id,
   });
 
   const { data: notes } = useQuery({
-    queryKey: ['property-notes', id],
+    queryKey: ['property-notes', property?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('property_notes')
         .select('*')
-        .eq('property_id', id)
+        .eq('property_id', property?.id)
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -102,25 +121,59 @@ const PropertyDetail = () => {
       
       return data as PropertyNote[];
     },
-    enabled: !!id,
+    enabled: !!property?.id,
   });
 
   const { data: tags } = useQuery({
-    queryKey: ['property-tags', id],
+    queryKey: ['property-tags', property?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('property_tag_relations')
         .select('property_tags(id, name)')
-        .eq('property_id', id);
+        .eq('property_id', property?.id);
       
       if (error) {
         throw new Error(error.message);
       }
       
+      // Transform the data to match the expected format
       return data?.map(item => item.property_tags) as PropertyTag[];
     },
-    enabled: !!id,
+    enabled: !!property?.id,
   });
+  
+  // Delete property handler
+  const handleDeleteProperty = async () => {
+    if (!property) return;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('properties')
+        .delete()
+        .eq('id', property.id);
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Property Deleted",
+        description: "The property has been successfully deleted.",
+      });
+      
+      // Navigate back to properties list
+      navigate('/properties');
+    } catch (error) {
+      console.error('Error deleting property:', error);
+      toast({
+        title: "Delete Failed",
+        description: `Failed to delete property: ${(error as Error).message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -145,10 +198,10 @@ const PropertyDetail = () => {
         <Card>
           <CardHeader>
             <CardTitle className="text-destructive">Error</CardTitle>
-            <CardDescription>Failed to load property details</CardDescription>
+            <CardDescription>Unable to retrieve property information. The property may have been deleted or you may not have permission to view it.</CardDescription>
           </CardHeader>
           <CardContent>
-            <p>Unable to retrieve property information. The property may have been deleted or you may not have permission to view it.</p>
+            <p>If you believe this is an error, please try refreshing the page or contact support.</p>
           </CardContent>
           <CardFooter>
             <Button onClick={() => navigate('/properties')}>Return to Properties</Button>
@@ -173,7 +226,10 @@ const PropertyDetail = () => {
             <PenLine className="mr-2 h-4 w-4" />
             Edit
           </Button>
-          <Button variant="destructive">
+          <Button 
+            variant="destructive"
+            onClick={() => setIsDeleteDialogOpen(true)}
+          >
             <Trash2 className="mr-2 h-4 w-4" />
             Delete
           </Button>
@@ -381,6 +437,17 @@ const PropertyDetail = () => {
           </Card>
         </div>
       </div>
+      
+      <ConfirmActionDialog
+        open={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleDeleteProperty}
+        title="Delete Property"
+        description="Are you sure you want to delete this property? This action cannot be undone and will remove all data associated with this property."
+        confirmLabel="Delete Property"
+        variant="destructive"
+        loading={isDeleting}
+      />
     </div>
   );
 };

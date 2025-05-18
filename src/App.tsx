@@ -10,6 +10,7 @@ import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import PropertyList from "./pages/PropertyList";
+import PropertyForm from "./pages/PropertyForm";
 import PropertyDetail from "./pages/PropertyDetail";
 import ProfileDetail from "./pages/ProfileDetail";
 import ReportDetail from "./pages/ReportDetail";
@@ -102,6 +103,14 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <MainLayout>
             <PropertyList />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/properties/new" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <PropertyForm />
           </MainLayout>
         </ProtectedRoute>
       } />
