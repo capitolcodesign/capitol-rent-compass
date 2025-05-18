@@ -29,7 +29,7 @@ export const login = async (email: string, password: string) => {
       });
     }
     
-    return data;
+    return data; // Return data object that contains user and session
   } catch (error) {
     console.error('Login error:', error);
     throw error;
@@ -66,7 +66,7 @@ export const signUp = async (email: string, password: string, firstName: string,
       description: 'Your account has been created. Please login to continue.',
     });
     
-    return data;
+    return data; // Return data object that contains user and session
   } catch (error: any) {
     console.error('Sign up error:', error);
     toast({

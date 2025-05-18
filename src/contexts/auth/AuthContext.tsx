@@ -98,7 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const result = await authLogin(email, password);
       console.log("Login result:", result);
-      return result;
+      return result; // This now matches our updated type definition
     } finally {
       // Don't set loading to false here
       // It will be handled by the auth state change listener
@@ -109,7 +109,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
     setIsLoading(true);
     try {
-      return await authSignUp(email, password, firstName, lastName);
+      const result = await authSignUp(email, password, firstName, lastName);
+      return result; // This now matches our updated type definition
     } finally {
       setIsLoading(false);
     }

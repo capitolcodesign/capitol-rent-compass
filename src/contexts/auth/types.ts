@@ -18,8 +18,8 @@ export interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<any>; // Updated return type
+  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<any>; // Updated return type
   logout: () => Promise<void>;
   checkOperationalHours: () => boolean;
   isWithinOperationalHours: boolean;

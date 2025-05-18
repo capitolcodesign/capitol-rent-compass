@@ -65,6 +65,7 @@ const Login: React.FC = () => {
   const handleLogin = async (values: z.infer<typeof LoginSchema>) => {
     try {
       console.log("Attempting login with:", values.email);
+      // No need to await or use the returned result since redirection happens in useEffect
       await login(values.email, values.password);
       // Navigation happens in the useEffect when isAuthenticated changes
     } catch (error) {
