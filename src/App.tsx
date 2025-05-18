@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/auth";
 import MainLayout from "./components/MainLayout";
+import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import PropertyList from "./pages/PropertyList";
@@ -55,12 +56,15 @@ const AppRoutes = () => {
   
   return (
     <Routes>
+      {/* Landing page as root route */}
+      <Route path="/" element={<LandingPage />} />
+      
       <Route path="/login" element={
-        isAuthenticated ? <Navigate to="/" replace /> : <Login />
+        isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
       } />
       <Route path="/sample-users" element={<SampleUsersCreator />} />
       
-      <Route path="/" element={
+      <Route path="/dashboard" element={
         <ProtectedRoute>
           <MainLayout>
             <Dashboard />

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import Logo from '@/components/Logo';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +10,10 @@ import SignupForm from '@/components/auth/SignupForm';
 import AuthFooter from '@/components/auth/AuthFooter';
 
 const Login: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('login');
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const tabParam = queryParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabParam === 'signup' ? 'signup' : 'login');
   const { isAuthenticated, session } = useAuth();
   const navigate = useNavigate();
   
@@ -20,7 +23,7 @@ const Login: React.FC = () => {
     console.log("Login component: Auth state check:", { isAuthenticated, session });
     if (isAuthenticated && session) {
       console.log("User authenticated, redirecting to dashboard");
-      navigate('/', { replace: true });
+      navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, session, navigate]);
   
