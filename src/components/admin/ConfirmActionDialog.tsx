@@ -46,7 +46,7 @@ export function ConfirmActionDialog({
           <AlertDialogCancel disabled={loading}>{cancelLabel}</AlertDialogCancel>
           <Button 
             onClick={onConfirm} 
-            variant={variant === "destructive" ? "danger" : "default"}
+            variant={variant === "destructive" ? "destructive" : "default"}
             disabled={loading}
           >
             {loading ? "Processing..." : confirmLabel}

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { User } from '@/contexts/auth/types';
+import { User, UserRole } from '@/contexts/auth/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -21,7 +21,7 @@ interface UserRoleManagementProps {
 }
 
 export function UserRoleManagement({ user, onUpdate }: UserRoleManagementProps) {
-  const [selectedRole, setSelectedRole] = useState(user.role);
+  const [selectedRole, setSelectedRole] = useState<UserRole>(user.role);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -78,16 +78,11 @@ export function UserRoleManagement({ user, onUpdate }: UserRoleManagementProps) 
   const handleDeleteUser = async () => {
     setIsDeleting(true);
     try {
-      // Note: This requires admin privileges in Supabase
-      // Since we can't directly delete users with the client library,
-      // we'll mark the profile as inactive and inform the admin
+      // Add a deleted_at field to the profiles table to mark users as deleted
       const { error } = await supabase
         .from('profiles')
         .update({ 
-          // Add an 'inactive' flag if you want to mark users as inactive
-          // instead of deleting them completely
-          inactive: true,
-          // You might want to add a deleted_at timestamp
+          // Add a 'deleted_at' timestamp
           deleted_at: new Date().toISOString()
         })
         .eq('id', user.id);
@@ -125,7 +120,7 @@ export function UserRoleManagement({ user, onUpdate }: UserRoleManagementProps) 
       <div className="flex items-center space-x-2">
         <Select
           value={selectedRole}
-          onValueChange={setSelectedRole}
+          onValueChange={(value: UserRole) => setSelectedRole(value)}
           disabled={isUpdating}
         >
           <SelectTrigger className="w-32">

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -32,6 +32,12 @@ import {
 import { ThemeCustomizer } from '@/components/admin/ThemeCustomizer';
 import { UserRoleManagement } from '@/components/admin/UserRoleManagement';
 import { ConfirmActionDialog } from '@/components/admin/ConfirmActionDialog';
+import { User, UserRole } from '@/contexts/auth/types';
+
+// Create an extended User interface for display purposes
+interface UserDisplay extends User {
+  created_at: string;
+}
 
 const Settings: React.FC = () => {
   const { toast } = useToast();
@@ -111,14 +117,19 @@ const Settings: React.FC = () => {
       if (error) throw error;
       
       // Convert to User type
-      return data?.map(profile => ({
-        id: profile.id,
-        email: `user-${profile.id.substring(0, 8)}@example.com`, // Placeholder
-        firstName: profile.first_name || '',
-        lastName: profile.last_name || '',
-        role: profile.role || 'staff',
-        created_at: profile.created_at
-      })) || [];
+      return data?.map(profile => {
+        // Ensure role is a valid UserRole
+        const role = (profile.role || 'staff') as UserRole;
+        
+        return {
+          id: profile.id,
+          email: `user-${profile.id.substring(0, 8)}@example.com`, // Placeholder
+          firstName: profile.first_name || '',
+          lastName: profile.last_name || '',
+          role,
+          created_at: profile.created_at
+        } as UserDisplay;
+      }) || [];
     },
     enabled: isAdmin,
   });

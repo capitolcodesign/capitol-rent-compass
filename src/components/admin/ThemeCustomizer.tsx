@@ -30,6 +30,14 @@ const COLOR_PRESETS = [
   { name: "Ruby Red", primary: "#E11D48", secondary: "#1C1917" },
 ];
 
+// Define the theme settings interface
+interface ThemeSettings {
+  primaryColor: string;
+  secondaryColor: string;
+  logoSize: number;
+  logoUrl: string;
+}
+
 export function ThemeCustomizer() {
   const { user } = useAuth();
   const [primaryColor, setPrimaryColor] = useState("#FF5C35");
@@ -52,7 +60,7 @@ export function ThemeCustomizer() {
         if (error) throw error;
         
         if (data?.value) {
-          const theme = data.value;
+          const theme = data.value as ThemeSettings;
           setPrimaryColor(theme.primaryColor || "#FF5C35");
           setSecondaryColor(theme.secondaryColor || "#1A2C38");
           setLogoSize(theme.logoSize || 40);
@@ -81,7 +89,7 @@ export function ThemeCustomizer() {
   };
 
   const saveTheme = async () => {
-    if (!user?.role === 'admin') {
+    if (!user || user.role !== 'admin') {
       toast({
         title: "Permission Denied",
         description: "Only administrators can save theme settings.",
@@ -92,7 +100,7 @@ export function ThemeCustomizer() {
     
     setIsLoading(true);
     try {
-      const themeSettings = {
+      const themeSettings: ThemeSettings = {
         primaryColor,
         secondaryColor,
         logoSize,
