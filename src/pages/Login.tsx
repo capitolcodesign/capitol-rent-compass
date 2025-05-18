@@ -14,26 +14,39 @@ const Login: React.FC = () => {
   const queryParams = new URLSearchParams(location.search);
   const tabParam = queryParams.get('tab');
   const [activeTab, setActiveTab] = useState(tabParam === 'signup' ? 'signup' : 'login');
-  const { isAuthenticated, session } = useAuth();
+  const { isAuthenticated, session, isLoading } = useAuth();
   const navigate = useNavigate();
   
   // This effect runs whenever isAuthenticated or session changes
   useEffect(() => {
-    // If user is authenticated, redirect to dashboard
-    console.log("Login component: Auth state check:", { isAuthenticated, session });
-    if (isAuthenticated && session) {
+    // Only redirect if auth state is determined (not loading) and user is authenticated
+    if (!isLoading && isAuthenticated && session) {
       console.log("User authenticated, redirecting to dashboard");
       navigate('/dashboard', { replace: true });
     }
-  }, [isAuthenticated, session, navigate]);
+  }, [isAuthenticated, session, navigate, isLoading]);
   
   const handleSignupSuccess = () => {
     // Switch to login tab after successful signup
     setActiveTab('login');
   };
   
-  // Add console log to debug authentication state
-  console.log("Auth state in Login component:", { isAuthenticated, hasSession: !!session });
+  // Show loading state while authentication is being checked
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-capitol-cream p-4">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent align-[-0.125em]"></div>
+          <p className="mt-4 text-capitol-charcoal">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // If already authenticated, don't render the login form at all
+  if (isAuthenticated) {
+    return null;
+  }
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-capitol-cream p-4">

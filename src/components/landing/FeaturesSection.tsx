@@ -20,7 +20,8 @@ const features = [
   }
 ];
 
-const FeaturesSection: React.FC = () => {
+// Memoize the features to prevent unnecessary re-renders
+const FeaturesSection: React.FC = React.memo(() => {
   return (
     <section className="py-20 px-4 bg-white">
       <div className="container mx-auto max-w-6xl">
@@ -55,6 +56,9 @@ const FeaturesSection: React.FC = () => {
       </div>
     </section>
   );
-};
+});
+
+// Set display name for React DevTools
+FeaturesSection.displayName = 'FeaturesSection';
 
 export default FeaturesSection;
