@@ -52,6 +52,19 @@ interface PropertyTag {
   name: string;
 }
 
+interface PropertyAmenity {
+  id: string;
+  name: string;
+  category: string | null;
+}
+
+interface PropertyCustomField {
+  id: string;
+  field_name: string;
+  field_value: string | null;
+  field_type: string;
+}
+
 const PropertyDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -72,7 +85,7 @@ const PropertyDetail = () => {
         .eq('property_id', id)
         .single();
       
-      // If not found by property_id, try by UUID id
+      // If not found, try by UUID id
       if (error && error.code === 'PGRST116') {
         const { data: dataById, error: errorById } = await supabase
           .from('properties')
@@ -145,6 +158,45 @@ const PropertyDetail = () => {
       
       // Transform the data to match the expected format
       return data?.map(item => item.property_tags) as PropertyTag[];
+    },
+    enabled: !!property?.id,
+  });
+  
+  // Fetch property amenities
+  const { data: amenities } = useQuery({
+    queryKey: ['property-amenities', property?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('property_amenities')
+        .select('*')
+        .eq('property_id', property?.id)
+        .order('category', { ascending: true })
+        .order('name', { ascending: true });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      return data as PropertyAmenity[];
+    },
+    enabled: !!property?.id,
+  });
+  
+  // Fetch custom fields
+  const { data: customFields } = useQuery({
+    queryKey: ['property-custom-fields', property?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('property_custom_fields')
+        .select('*')
+        .eq('property_id', property?.id)
+        .order('field_name', { ascending: true });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      return data as PropertyCustomField[];
     },
     enabled: !!property?.id,
   });
@@ -226,12 +278,18 @@ const PropertyDetail = () => {
       <PropertyDetailHeader 
         propertyName={property.name}
         onDeleteClick={() => setIsDeleteDialogOpen(true)}
+        onEditClick={() => navigate(`/properties/edit/${property.property_id}`)}
       />
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
           {/* Property Information Card */}
-          <PropertyInformation property={property} tags={tags} />
+          <PropertyInformation 
+            property={property} 
+            tags={tags} 
+            amenities={amenities}
+            customFields={customFields}
+          />
 
           {/* Property Tabs: Notes, Attributes, Images */}
           <PropertyTabs notes={notes} attributes={attributes} />

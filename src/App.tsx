@@ -123,6 +123,14 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       
+      <Route path="/properties/edit/:id" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <PropertyForm />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      
       <Route path="/analysis" element={
         <ProtectedRoute>
           <MainLayout>

@@ -114,6 +114,38 @@ export type Database = {
         }
         Relationships: []
       }
+      property_amenities: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          id: string
+          name: string
+          property_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+          property_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          property_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_amenities_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       property_attributes: {
         Row: {
           created_at: string | null
@@ -139,6 +171,98 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "property_attributes_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      property_category_relations: {
+        Row: {
+          category_id: string | null
+          created_at: string | null
+          id: string
+          property_id: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string | null
+          id?: string
+          property_id?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string | null
+          id?: string
+          property_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_category_relations_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "property_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_category_relations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_custom_fields: {
+        Row: {
+          created_at: string | null
+          field_name: string
+          field_type: string | null
+          field_value: string | null
+          id: string
+          property_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          field_name: string
+          field_type?: string | null
+          field_value?: string | null
+          id?: string
+          property_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          field_name?: string
+          field_type?: string | null
+          field_value?: string | null
+          id?: string
+          property_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_custom_fields_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
