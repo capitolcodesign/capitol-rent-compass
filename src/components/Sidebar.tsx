@@ -15,6 +15,12 @@ import {
   LogOut,
   ShieldCheck,
   Scale,
+  Database,
+  PlusCircle,
+  ListPlus,
+  ClipboardList,
+  LayoutDashboard,
+  Lock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -33,23 +39,61 @@ type NavItem = {
   badge?: string;
 };
 
+type NavGroup = {
+  title: string;
+  items: NavItem[];
+  roles: string[];
+};
+
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
   
-  const navItems: NavItem[] = [
-    { name: 'Dashboard', path: '/dashboard', icon: Home, roles: ['admin', 'staff', 'auditor'] },
-    { name: 'Property Database', path: '/properties', icon: Building2, roles: ['admin', 'staff', 'auditor'] },
-    { name: 'Rent Analysis', path: '/analysis', icon: BarChart3, roles: ['admin', 'staff', 'auditor'] },
-    { name: 'Rental Fairness', path: '/rental-fairness', icon: Scale, roles: ['admin', 'staff', 'auditor'] },
-    { name: 'Reports', path: '/reports', icon: FileText, roles: ['admin', 'staff', 'auditor'] },
-    { name: 'Users', path: '/users', icon: Users, roles: ['admin'] },
-    { name: 'Settings', path: '/settings', icon: Settings, roles: ['admin'] },
+  const navGroups: NavGroup[] = [
+    {
+      title: "Overview",
+      roles: ['admin', 'staff', 'auditor'],
+      items: [
+        { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'staff', 'auditor'] },
+      ]
+    },
+    {
+      title: "Properties",
+      roles: ['admin', 'staff', 'auditor'],
+      items: [
+        { name: 'Property Database', path: '/properties', icon: Database, roles: ['admin', 'staff', 'auditor'] },
+        { name: 'Add Property', path: '/properties/new', icon: PlusCircle, roles: ['admin', 'staff'] },
+      ]
+    },
+    {
+      title: "Analysis",
+      roles: ['admin', 'staff', 'auditor'],
+      items: [
+        { name: 'Rent Analysis', path: '/analysis', icon: BarChart3, roles: ['admin', 'staff', 'auditor'] },
+        { name: 'Rental Fairness', path: '/rental-fairness', icon: Scale, roles: ['admin', 'staff', 'auditor'] },
+      ]
+    },
+    {
+      title: "Reports",
+      roles: ['admin', 'staff', 'auditor'],
+      items: [
+        { name: 'Reports List', path: '/reports', icon: FileText, roles: ['admin', 'staff', 'auditor'] },
+        { name: 'Create Report', path: '/reports/new', icon: ListPlus, roles: ['admin', 'staff'] },
+      ]
+    },
+    {
+      title: "Administration",
+      roles: ['admin'],
+      items: [
+        { name: 'User Management', path: '/users', icon: Users, roles: ['admin'] },
+        { name: 'Settings', path: '/settings', icon: Settings, roles: ['admin'] },
+      ]
+    }
   ];
   
-  // Filter nav items based on user role
-  const filteredNavItems = navItems.filter(
-    item => user && item.roles.includes(user.role)
+  // Filter nav groups based on user role
+  const filteredNavGroups = navGroups.filter(
+    group => user && group.roles.includes(user.role)
   );
 
   // Custom styles for active and inactive items
@@ -96,50 +140,61 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
           </Button>
         </div>
         
-        <div className="py-4">
-          <nav className="space-y-1 px-2">
-            {filteredNavItems.map((item) => {
-              const isActive = location.pathname === item.path || 
-                (item.path !== '/dashboard' && location.pathname.startsWith(item.path));
-                
-              return isOpen ? (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={cn(
-                    "flex items-center px-4 py-2 text-sm rounded-md transition-colors group",
-                    isActive ? activeLinkClass : inactiveLinkClass
-                  )}
-                >
-                  <item.icon className="mr-3 h-5 w-5 text-sidebar-primary" />
-                  <span>{item.name}</span>
-                  {item.badge && (
-                    <span className="ml-auto bg-primary/20 text-primary text-xs px-2 py-0.5 rounded-full">
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
-              ) : (
-                <TooltipProvider key={item.path}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
+        <div className="py-4 overflow-y-auto h-[calc(100%-8rem)]">
+          <nav className="space-y-6 px-2">
+            {filteredNavGroups.map((group, groupIndex) => (
+              <div key={groupIndex}>
+                {isOpen && (
+                  <h3 className="ml-3 text-xs font-medium uppercase tracking-wider text-sidebar-foreground/50 mb-2">
+                    {group.title}
+                  </h3>
+                )}
+                <div className="space-y-1">
+                  {group.items.map((item) => {
+                    const isActive = location.pathname === item.path || 
+                      (item.path !== '/dashboard' && location.pathname.startsWith(item.path));
+                      
+                    return isOpen ? (
                       <Link
+                        key={item.path}
                         to={item.path}
                         className={cn(
-                          "flex justify-center items-center p-2 text-sm rounded-md transition-colors",
+                          "flex items-center px-4 py-2 text-sm rounded-md transition-colors group",
                           isActive ? activeLinkClass : inactiveLinkClass
                         )}
                       >
-                        <item.icon className="h-5 w-5" />
+                        <item.icon className="mr-3 h-5 w-5 text-sidebar-primary" />
+                        <span>{item.name}</span>
+                        {item.badge && (
+                          <span className="ml-auto bg-primary/20 text-primary text-xs px-2 py-0.5 rounded-full">
+                            {item.badge}
+                          </span>
+                        )}
                       </Link>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      {item.name}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              );
-            })}
+                    ) : (
+                      <TooltipProvider key={item.path}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Link
+                              to={item.path}
+                              className={cn(
+                                "flex justify-center items-center p-2 text-sm rounded-md transition-colors",
+                                isActive ? activeLinkClass : inactiveLinkClass
+                              )}
+                            >
+                              <item.icon className="h-5 w-5" />
+                            </Link>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">
+                            {item.name}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
         </div>
         
@@ -150,7 +205,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
                 {user.role === 'admin' && (
                   <ShieldCheck className="h-4 w-4 mr-2 text-green-500" />
                 )}
-                <div className="text-sm font-medium">{user.firstName} {user.lastName}</div>
+                {user.role === 'staff' && (
+                  <ClipboardList className="h-4 w-4 mr-2 text-blue-500" />
+                )}
+                {user.role === 'auditor' && (
+                  <Lock className="h-4 w-4 mr-2 text-amber-500" />
+                )}
+                <div className="text-sm font-medium truncate">{user.firstName} {user.lastName}</div>
               </div>
               <div className="text-xs text-sidebar-foreground/80 mt-1 capitalize">{user.role}</div>
             </div>
