@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
+import { MapPin } from 'lucide-react';
 
 interface PropertyDetailsFormProps {
   propertyDetails: PropertyDetails;
@@ -73,7 +75,7 @@ const PropertyDetailsForm: React.FC<PropertyDetailsFormProps> = ({
     setPropertyDetails((prev) => ({
       ...prev,
       location: address.full,
-      // You can also store these separately if needed
+      // Store address components and coordinates
       locationDetails: {
         street: address.street,
         city: address.city,
@@ -145,12 +147,20 @@ const PropertyDetailsForm: React.FC<PropertyDetailsFormProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="location">Location</Label>
-          <AddressAutocomplete
-            onAddressSelect={handleAddressSelect}
-            defaultValue={propertyDetails.location}
-            placeholder="Enter property address"
-          />
+          <Label htmlFor="location">Property Address</Label>
+          <div className="relative">
+            <AddressAutocomplete
+              onAddressSelect={handleAddressSelect}
+              defaultValue={propertyDetails.location}
+              placeholder="Enter property address"
+            />
+          </div>
+          {propertyDetails.locationDetails?.lat && propertyDetails.locationDetails?.lng && (
+            <div className="text-xs text-muted-foreground flex items-center mt-1">
+              <MapPin className="h-3 w-3 mr-1" /> 
+              GPS: {propertyDetails.locationDetails.lat.toFixed(6)}, {propertyDetails.locationDetails.lng.toFixed(6)}
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">

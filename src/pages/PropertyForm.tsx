@@ -23,7 +23,13 @@ const PropertyForm = () => {
     type: 'Multi-family',
     units: 1,
     built_year: new Date().getFullYear() - 10,
-    zip: ''
+    zip: '',
+    street: '',
+    city: '',
+    state: '',
+    latitude: null as number | null,
+    longitude: null as number | null,
+    description: ''
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -60,11 +66,17 @@ const PropertyForm = () => {
             id: data.id,
             property_id: data.property_id,
             name: data.name,
-            address: data.address,
+            address: data.address || '',
             type: data.type,
             units: data.units,
             built_year: data.built_year,
-            zip: data.zip,
+            zip: data.zip || '',
+            street: data.street || '',
+            city: data.city || '',
+            state: data.state || '',
+            latitude: data.latitude || null,
+            longitude: data.longitude || null,
+            description: data.description || ''
           });
         }
       } catch (error) {
@@ -83,18 +95,54 @@ const PropertyForm = () => {
     fetchPropertyData();
   }, [id, navigate, toast]);
   
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setPropertyData(prev => ({
-      ...prev,
-      [name]: name === 'units' || name === 'built_year' ? parseInt(value, 10) || 0 : value
-    }));
+    
+    // Handle numeric fields
+    if (name === 'units' || name === 'built_year') {
+      setPropertyData(prev => ({
+        ...prev,
+        [name]: parseInt(value, 10) || 0
+      }));
+    } 
+    // Handle latitude and longitude
+    else if (name === 'latitude' || name === 'longitude') {
+      setPropertyData(prev => ({
+        ...prev,
+        [name]: value === '' ? null : parseFloat(value)
+      }));
+    }
+    // All other fields
+    else {
+      setPropertyData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
   
   const handleTypeChange = (value: string) => {
     setPropertyData(prev => ({
       ...prev,
       type: value
+    }));
+  };
+  
+  const updateCoordinates = (lat: number, lng: number) => {
+    setPropertyData(prev => ({
+      ...prev,
+      latitude: lat,
+      longitude: lng
+    }));
+  };
+  
+  const updateAddress = (addressComponents: {street?: string, city?: string, state?: string, zip?: string}) => {
+    setPropertyData(prev => ({
+      ...prev,
+      street: addressComponents.street || prev.street,
+      city: addressComponents.city || prev.city,
+      state: addressComponents.state || prev.state,
+      zip: addressComponents.zip || prev.zip
     }));
   };
   
@@ -124,6 +172,12 @@ const PropertyForm = () => {
             units: propertyData.units,
             built_year: propertyData.built_year,
             zip: propertyData.zip,
+            street: propertyData.street,
+            city: propertyData.city,
+            state: propertyData.state,
+            latitude: propertyData.latitude,
+            longitude: propertyData.longitude,
+            description: propertyData.description
           })
           .eq('id', propertyData.id);
         
@@ -151,6 +205,12 @@ const PropertyForm = () => {
             units: propertyData.units,
             built_year: propertyData.built_year,
             zip: propertyData.zip,
+            street: propertyData.street,
+            city: propertyData.city,
+            state: propertyData.state,
+            latitude: propertyData.latitude,
+            longitude: propertyData.longitude,
+            description: propertyData.description,
             user_id: user?.id
           })
           .select('id, property_id')
@@ -201,7 +261,7 @@ const PropertyForm = () => {
         <h1 className="text-2xl font-bold">{id ? 'Edit Property' : 'Add New Property'}</h1>
       </div>
       
-      <Card className="max-w-3xl mx-auto">
+      <Card className="max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle className="flex items-center">
             <Building2 className="mr-2 h-5 w-5" />
@@ -221,6 +281,8 @@ const PropertyForm = () => {
               propertyData={propertyData}
               handleChange={handleChange}
               handleTypeChange={handleTypeChange}
+              updateCoordinates={updateCoordinates}
+              updateAddress={updateAddress}
               isNew={!id}
             />
           </CardContent>
