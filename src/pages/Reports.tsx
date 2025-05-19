@@ -65,7 +65,7 @@ export default function Reports() {
           </p>
         </div>
         <div className="mt-4 md:mt-0">
-          <Button>
+          <Button onClick={() => navigate('/reports/new')}>
             <Plus className="mr-2 h-4 w-4" />
             Create Report
           </Button>
