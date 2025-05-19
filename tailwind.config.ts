@@ -72,8 +72,8 @@ export default {
 				},
 				// New professional colors inspired by Element451
 				element: {
-					orange: 'var(--element-orange, #FF5C35)',   // Bright orange accent color
-					navy: 'var(--element-navy, #1A2C38)',     // Dark navy background
+					orange: '#FF5C35',   // Bright orange accent color
+					navy: '#1A2C38',     // Dark navy background
 					lightBlue: '#F5F8FA', // Light blue/gray background
 					charcoal: '#333333',  // Dark text color
 					lightGray: '#F1F1F1', // Light gray background
