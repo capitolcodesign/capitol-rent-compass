@@ -10,6 +10,7 @@ import PropertyAmenitiesSelect from './PropertyAmenitiesSelect';
 import PropertyTagsSelect from './PropertyTagsSelect';
 import PropertyCategoriesSelect from './PropertyCategoriesSelect';
 import PropertyCustomFields from './PropertyCustomFields';
+import AddressAutocomplete from '@/components/AddressAutocomplete';
 
 interface PropertyFormData {
   id?: string;
@@ -35,6 +36,31 @@ const PropertyFormFields: React.FC<PropertyFormFieldsProps> = ({
   handleTypeChange,
   isNew = true,
 }) => {
+  
+  const handleAddressSelect = (address: any) => {
+    // Create a synthetic event to update the address field
+    const addressEvent = {
+      target: {
+        name: 'address',
+        value: address.full
+      }
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    // If we have a zip code, update that too
+    if (address.zip) {
+      const zipEvent = {
+        target: {
+          name: 'zip',
+          value: address.zip
+        }
+      } as React.ChangeEvent<HTMLInputElement>;
+      
+      handleChange(zipEvent);
+    }
+    
+    handleChange(addressEvent);
+  };
+  
   return (
     <Tabs defaultValue="basic" className="space-y-6">
       <TabsList className="grid grid-cols-2 md:grid-cols-6 mb-4">
@@ -65,13 +91,10 @@ const PropertyFormFields: React.FC<PropertyFormFieldsProps> = ({
         
         <div className="space-y-2">
           <Label htmlFor="address">Address*</Label>
-          <Input 
-            id="address" 
-            name="address"
-            placeholder="Enter property address" 
-            value={propertyData.address}
-            onChange={handleChange}
-            required
+          <AddressAutocomplete
+            onAddressSelect={handleAddressSelect}
+            defaultValue={propertyData.address}
+            placeholder="Enter property address"
           />
         </div>
         

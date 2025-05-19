@@ -23,6 +23,7 @@ declare global {
         };
       };
     };
+    initGooglePlaces: () => void;
   }
 }
 
@@ -102,6 +103,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
   const placesService = useRef<google.maps.places.PlacesService | null>(null);
+  const placesDiv = useRef<HTMLDivElement | null>(null);
   
   // Fetch Google Maps API key from settings
   const { data: apiKeys } = useQuery({
@@ -116,7 +118,6 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       
       const keys: Record<string, string> = {};
       data.forEach(item => {
-        // Ensure value is cast to string to avoid type issues
         keys[item.key] = String(item.value);
       });
       
@@ -131,22 +132,35 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     }
   }, [defaultValue]);
 
-  // Initialize Google Places Autocomplete after the API key is fetched
+  // Initialize Google Places Autocomplete
   useEffect(() => {
-    if (!apiKeys?.google_maps_api_key || window.google?.maps?.places) return;
+    if (!apiKeys?.google_maps_api_key) return;
+    
+    // Create the invisible div for places service if it doesn't exist
+    if (!placesDiv.current) {
+      placesDiv.current = document.createElement('div');
+      placesDiv.current.style.display = 'none';
+      document.body.appendChild(placesDiv.current);
+    }
     
     // Check if script is already loaded
     const existingScript = document.querySelector(`script[src*="maps.googleapis.com/maps/api/js"]`);
     if (existingScript) {
-      initializePlacesServices();
+      if (window.google?.maps?.places) {
+        initializePlacesServices();
+      }
       return;
     }
     
+    // Define global initialization function
+    window.initGooglePlaces = () => {
+      initializePlacesServices();
+    };
+    
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKeys.google_maps_api_key}&libraries=places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKeys.google_maps_api_key}&libraries=places&callback=initGooglePlaces`;
     script.async = true;
     script.defer = true;
-    script.onload = initializePlacesServices;
     document.head.appendChild(script);
     
     return () => {
@@ -156,6 +170,10 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         if (scriptToRemove && scriptToRemove.parentNode) {
           scriptToRemove.parentNode.removeChild(scriptToRemove);
         }
+      }
+      // Remove the places div
+      if (placesDiv.current && placesDiv.current.parentNode) {
+        placesDiv.current.parentNode.removeChild(placesDiv.current);
       }
     };
   }, [apiKeys?.google_maps_api_key]);
@@ -168,12 +186,9 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     
     autocompleteService.current = new window.google.maps.places.AutocompleteService();
     
-    // Create a dummy div for Places Service
-    const placesDiv = document.createElement('div');
-    placesDiv.style.display = 'none';
-    document.body.appendChild(placesDiv);
-    
-    placesService.current = new window.google.maps.places.PlacesService(placesDiv);
+    if (placesDiv.current) {
+      placesService.current = new window.google.maps.places.PlacesService(placesDiv.current);
+    }
   };
 
   // Handle address search with Google Places API

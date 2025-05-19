@@ -247,7 +247,7 @@ const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({
         </div>
       </div>
       
-      <Tabs defaultValue="property">
+      <Tabs defaultValue="maps">
         <TabsList>
           <TabsTrigger value="property" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
