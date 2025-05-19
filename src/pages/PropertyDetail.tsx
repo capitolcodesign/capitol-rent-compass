@@ -1,11 +1,8 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ConfirmActionDialog } from '@/components/admin/ConfirmActionDialog';
 import { useAuth } from '@/contexts/auth';
 import PropertyDetailHeader from '@/components/properties/PropertyDetailHeader';
 import PropertyInformation from '@/components/properties/PropertyInformation';
@@ -14,61 +11,18 @@ import PropertyReports from '@/components/properties/PropertyReports';
 import PropertyAmenitiesTags from '@/components/properties/PropertyAmenitiesTags';
 import PropertyCategoryTags from '@/components/properties/PropertyCategoryTags';
 import PropertyTabs from '@/components/properties/PropertyTabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ChevronLeft } from 'lucide-react';
-import FairnessCalculator from '@/components/rental-fairness/FairnessCalculator';
-import RentalAssistantChat from '@/components/rental-fairness/RentalAssistantChat';
+import PropertyImageCarousel from '@/components/properties/PropertyImageCarousel';
+import { PropertyDetailLoading, PropertyDetailError } from '@/components/properties/PropertyDetailFallbacks';
+import { PropertyDetailDialogs } from '@/components/properties/PropertyDetailDialogs';
+import { usePropertyDetail } from '@/hooks/usePropertyDetail';
+import { usePropertyAttributes } from '@/hooks/usePropertyAttributes';
+import { usePropertyNotes } from '@/hooks/usePropertyNotes';
+import { usePropertyTags } from '@/hooks/usePropertyTags';
 import { usePropertyCategories } from '@/components/properties/hooks/usePropertyCategories';
+import { usePropertyAmenities } from '@/components/properties/hooks/usePropertyAmenities';
+import { usePropertyCustomFields } from '@/hooks/usePropertyCustomFields';
 
-interface PropertyDetail {
-  id: string;
-  name: string;
-  address: string;
-  property_id: string;
-  type: string;
-  units: number;
-  built_year: number;
-  city?: string;
-  state?: string;
-  street?: string;
-  zip: string;
-  latitude?: number;
-  longitude?: number;
-  last_analysis?: string;
-  created_at?: string;
-  rent?: number;
-  square_feet?: number;
-  bedrooms?: number;
-  bathrooms?: number;
-  condition?: string;
-}
-
-interface PropertyAttribute {
-  id: string;
-  key: string;
-  value: string;
-}
-
-interface PropertyNote {
-  id: string;
-  content: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-}
-
-interface PropertyTag {
-  id: string;
-  name: string;
-}
-
-interface PropertyAmenity {
-  id: string;
-  name: string;
-  category: string | null;
-}
-
-interface PropertyCustomField {
+export interface PropertyCustomField {
   id: string;
   field_name: string;
   field_value: string | null;
@@ -86,136 +40,15 @@ const PropertyDetail = () => {
   const [isFairnessDialogOpen, setIsFairnessDialogOpen] = useState(false);
   const [isGptDialogOpen, setIsGptDialogOpen] = useState(false);
 
-  // Fetch property details
-  const { data: property, isLoading, error } = useQuery({
-    queryKey: ['property', id],
-    queryFn: async () => {
-      // First try to fetch by property_id which is what we use in URLs
-      let { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('property_id', id)
-        .single();
-      
-      // If not found, try by UUID id
-      if (error && error.code === 'PGRST116') {
-        const { data: dataById, error: errorById } = await supabase
-          .from('properties')
-          .select('*')
-          .eq('id', id)
-          .single();
-        
-        if (errorById) {
-          throw new Error(errorById.message);
-        }
-        
-        data = dataById;
-      } else if (error) {
-        throw new Error(error.message);
-      }
-      
-      return data as PropertyDetail;
-    },
-  });
-
-  // Fetch property categories
+  // Fetch property data using custom hooks
+  const { property, isLoading, error } = usePropertyDetail(id);
+  const { attributes } = usePropertyAttributes(property?.id);
+  const { notes } = usePropertyNotes(property?.id);
+  const { tags } = usePropertyTags(property?.id);
   const { categories } = usePropertyCategories(property?.id || '');
+  const { amenities } = usePropertyAmenities(property?.id);
+  const { data: customFields } = usePropertyCustomFields(property?.id);
 
-  // Fetch property attributes
-  const { data: attributes } = useQuery({
-    queryKey: ['property-attributes', property?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('property_attributes')
-        .select('*')
-        .eq('property_id', property?.id);
-      
-      if (error) {
-        throw new Error(error.message);
-      }
-      
-      return data as PropertyAttribute[];
-    },
-    enabled: !!property?.id,
-  });
-
-  // Fetch property notes
-  const { data: notes } = useQuery({
-    queryKey: ['property-notes', property?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('property_notes')
-        .select('*')
-        .eq('property_id', property?.id)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        throw new Error(error.message);
-      }
-      
-      return data as PropertyNote[];
-    },
-    enabled: !!property?.id,
-  });
-
-  // Fetch property tags
-  const { data: tags } = useQuery({
-    queryKey: ['property-tags', property?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('property_tag_relations')
-        .select('property_tags(id, name)')
-        .eq('property_id', property?.id);
-      
-      if (error) {
-        throw new Error(error.message);
-      }
-      
-      // Transform the data to match the expected format
-      return data?.map(item => item.property_tags) as PropertyTag[];
-    },
-    enabled: !!property?.id,
-  });
-  
-  // Fetch property amenities
-  const { data: amenities } = useQuery({
-    queryKey: ['property-amenities', property?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('property_amenities')
-        .select('*')
-        .eq('property_id', property?.id)
-        .order('category', { ascending: true })
-        .order('name', { ascending: true });
-      
-      if (error) {
-        throw new Error(error.message);
-      }
-      
-      return data as PropertyAmenity[];
-    },
-    enabled: !!property?.id,
-  });
-  
-  // Fetch custom fields
-  const { data: customFields } = useQuery({
-    queryKey: ['property-custom-fields', property?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('property_custom_fields')
-        .select('*')
-        .eq('property_id', property?.id)
-        .order('field_name', { ascending: true });
-      
-      if (error) {
-        throw new Error(error.message);
-      }
-      
-      return data as PropertyCustomField[];
-    },
-    enabled: !!property?.id,
-  });
-  
   // Delete property handler
   const handleDeleteProperty = async () => {
     if (!property) return;
@@ -257,40 +90,12 @@ const PropertyDetail = () => {
 
   // Loading state
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent align-[-0.125em]"></div>
-          <p className="mt-4 text-muted-foreground">Loading property details...</p>
-        </div>
-      </div>
-    );
+    return <PropertyDetailLoading />;
   }
 
   // Error state
   if (error || !property) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center mb-6">
-          <Button variant="ghost" onClick={() => navigate('/properties')} className="mr-2">
-            <ChevronLeft size={18} />
-            Back
-          </Button>
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-destructive">Error</CardTitle>
-            <CardDescription>Unable to retrieve property information. The property may have been deleted or you may not have permission to view it.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>If you believe this is an error, please try refreshing the page or contact support.</p>
-          </CardContent>
-          <CardFooter>
-            <Button onClick={() => navigate('/properties')}>Return to Properties</Button>
-          </CardFooter>
-        </Card>
-      </div>
-    );
+    return <PropertyDetailError />;
   }
 
   return (
@@ -310,6 +115,11 @@ const PropertyDetail = () => {
           categories={categories || []} 
           className="mb-4"
         />
+      </div>
+
+      {/* Property Image Carousel */}
+      <div className="mb-6">
+        <PropertyImageCarousel propertyId={property.id} />
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -338,57 +148,19 @@ const PropertyDetail = () => {
         </div>
       </div>
       
-      {/* Delete Confirmation Dialog */}
-      <ConfirmActionDialog
-        open={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        onConfirm={handleDeleteProperty}
-        title="Delete Property"
-        description="Are you sure you want to delete this property? This action cannot be undone and will remove all data associated with this property."
-        confirmLabel="Delete Property"
-        variant="destructive"
-        loading={isDeleting}
+      {/* Dialogs */}
+      <PropertyDetailDialogs 
+        property={property}
+        isDeleteDialogOpen={isDeleteDialogOpen}
+        setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+        isFairnessDialogOpen={isFairnessDialogOpen}
+        setIsFairnessDialogOpen={setIsFairnessDialogOpen}
+        isGptDialogOpen={isGptDialogOpen}
+        setIsGptDialogOpen={setIsGptDialogOpen}
+        isDeleting={isDeleting}
+        onDeleteProperty={handleDeleteProperty}
+        extractAmenityNames={extractAmenityNames}
       />
-
-      {/* Fairness Calculator Dialog */}
-      <Dialog open={isFairnessDialogOpen} onOpenChange={setIsFairnessDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Rental Fairness Calculator - {property.name}</DialogTitle>
-          </DialogHeader>
-          <FairnessCalculator 
-            propertyDetails={{
-              location: property.address,
-              locationDetails: {
-                street: property.street || '',
-                city: property.city || '',
-                state: property.state || '',
-                zip: property.zip,
-                lat: property.latitude || 0,
-                lng: property.longitude || 0
-              },
-              rent: property.rent || 0,
-              squareFeet: property.square_feet || 0,
-              bedrooms: property.bedrooms || 0,
-              bathrooms: property.bathrooms || 0,
-              amenities: extractAmenityNames(),
-              condition: property.condition || ''
-            }}
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* GPT Assistant Dialog */}
-      <Dialog open={isGptDialogOpen} onOpenChange={setIsGptDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Property Assistant - {property.name}</DialogTitle>
-          </DialogHeader>
-          <div className="p-4">
-            <RentalAssistantChat propertyId={property.id} propertyName={property.name} address={property.address} />
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
