@@ -11,9 +11,13 @@ import FairnessResult from '@/components/rental-fairness/FairnessResult';
 
 interface FairnessCalculatorProps {
   propertyDetails?: Partial<PropertyDetails>;
+  autoCalculate?: boolean;
 }
 
-const FairnessCalculator: React.FC<FairnessCalculatorProps> = ({ propertyDetails = {} }) => {
+const FairnessCalculator: React.FC<FairnessCalculatorProps> = ({ 
+  propertyDetails = {},
+  autoCalculate = false
+}) => {
   const [activeTab, setActiveTab] = useState('details');
   const [details, setDetails] = useState<PropertyDetails>({
     rent: propertyDetails.rent || 0,
@@ -69,6 +73,18 @@ const FairnessCalculator: React.FC<FairnessCalculatorProps> = ({ propertyDetails
       }));
     }
   }, [propertyDetails]);
+
+  // Auto-calculate effect
+  useEffect(() => {
+    if (autoCalculate && details.location && details.rent && details.squareFeet) {
+      // Use setTimeout to ensure the component is fully rendered before calculation
+      const timer = setTimeout(() => {
+        handleCalculate();
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [autoCalculate, details.location, details.rent, details.squareFeet]);
 
   const handleCalculate = async () => {
     // Validate inputs

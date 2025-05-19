@@ -69,6 +69,7 @@ export const PropertyDetailDialogs: React.FC<PropertyDetailDialogsProps> = ({
               amenities: extractAmenityNames(),
               condition: property.condition || ''
             }}
+            autoCalculate={true}
           />
         </DialogContent>
       </Dialog>
