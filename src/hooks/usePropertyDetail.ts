@@ -23,7 +23,7 @@ export interface PropertyDetail {
   bedrooms?: number;
   bathrooms?: number;
   condition?: string;
-  description?: string; // Add description field to the type
+  description?: string; // Ensure the description field is explicitly included
 }
 
 export const usePropertyDetail = (propertyId?: string) => {

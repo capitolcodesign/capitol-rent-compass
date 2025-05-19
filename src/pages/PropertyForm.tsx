@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Building2, ArrowLeft, CheckCircle, Save } from 'lucide-react';
@@ -29,7 +28,7 @@ const PropertyForm = () => {
     state: '',
     latitude: null as number | null,
     longitude: null as number | null,
-    description: '' // Add description field to the state
+    description: '' // Explicitly include description field in the state
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -76,7 +75,7 @@ const PropertyForm = () => {
             state: data.state || '',
             latitude: data.latitude || null,
             longitude: data.longitude || null,
-            description: data.description || '' // Handle description from database
+            description: data.description || '' // Properly handle description from database
           });
         }
       } catch (error) {

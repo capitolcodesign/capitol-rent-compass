@@ -63,6 +63,7 @@ export type Database = {
           built_year: number
           city: string | null
           created_at: string | null
+          description: string | null
           id: string
           last_analysis: string | null
           latitude: number | null
@@ -81,6 +82,7 @@ export type Database = {
           built_year: number
           city?: string | null
           created_at?: string | null
+          description?: string | null
           id?: string
           last_analysis?: string | null
           latitude?: number | null
@@ -99,6 +101,7 @@ export type Database = {
           built_year?: number
           city?: string | null
           created_at?: string | null
+          description?: string | null
           id?: string
           last_analysis?: string | null
           latitude?: number | null
