@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, User, Mail, Calendar, ClipboardList, UserCheck } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { EditUserProfileForm } from '@/components/users/EditUserProfileForm';
+import { toast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/auth';
 
 interface UserProfile {
   id: string;
@@ -22,6 +25,9 @@ interface UserProfile {
 const ProfileDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
+  const queryClient = useQueryClient();
+  const [isEditing, setIsEditing] = useState(false);
   
   const { data: profile, isLoading, error } = useQuery({
     queryKey: ['profile', id],
@@ -39,6 +45,29 @@ const ProfileDetail = () => {
       return data as UserProfile;
     },
   });
+
+  // Check if current user is admin
+  const isAdmin = currentUser?.role === 'admin';
+
+  // Handle user deactivation
+  const handleDeactivateUser = async () => {
+    try {
+      // In a real implementation, you would call a Supabase Function or Edge Function 
+      // that uses the admin API to deactivate a user
+      // For now, we'll just show a toast
+      toast({
+        title: "Feature not implemented",
+        description: "User deactivation requires Supabase Edge Functions with admin privileges.",
+      });
+    } catch (error) {
+      console.error('Error deactivating user:', error);
+      toast({
+        title: "Error",
+        description: "Failed to deactivate user.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Fetch user's email from auth.users (if permissions allow)
   const { data: authInfo } = useQuery({
@@ -86,6 +115,15 @@ const ProfileDetail = () => {
     },
     enabled: !!id,
   });
+
+  const handleEditSuccess = () => {
+    setIsEditing(false);
+    queryClient.invalidateQueries({ queryKey: ['profile', id] });
+    toast({
+      title: "Profile Updated",
+      description: "User profile has been successfully updated.",
+    });
+  };
 
   if (isLoading) {
     return (
@@ -139,14 +177,16 @@ const ProfileDetail = () => {
           </Button>
           <h1 className="text-2xl font-bold">User Profile</h1>
         </div>
-        <div className="mt-4 md:mt-0 flex space-x-2">
-          <Button variant="outline">
-            Reset Password
-          </Button>
-          <Button variant="destructive">
-            Deactivate User
-          </Button>
-        </div>
+        {isAdmin && (
+          <div className="mt-4 md:mt-0 flex space-x-2">
+            <Button variant="outline">
+              Reset Password
+            </Button>
+            <Button variant="destructive" onClick={handleDeactivateUser}>
+              Deactivate User
+            </Button>
+          </div>
+        )}
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -167,46 +207,67 @@ const ProfileDetail = () => {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {authInfo?.email && (
-                  <div className="flex items-start space-x-3">
-                    <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium">Email Address</p>
-                      <p className="text-sm text-muted-foreground">{authInfo.email}</p>
+            
+            {isEditing && isAdmin ? (
+              <CardContent>
+                <EditUserProfileForm 
+                  user={profile} 
+                  onSuccess={handleEditSuccess}
+                  onCancel={() => setIsEditing(false)} 
+                />
+              </CardContent>
+            ) : (
+              <>
+                <CardContent>
+                  <div className="space-y-4">
+                    {authInfo?.email && (
+                      <div className="flex items-start space-x-3">
+                        <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium">Email Address</p>
+                          <p className="text-sm text-muted-foreground">{authInfo.email}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-start space-x-3">
+                      <UserCheck className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium">Role</p>
+                        <p className="text-sm text-muted-foreground capitalize">{profile.role || 'User'}</p>
+                      </div>
                     </div>
+                    
+                    {profile.created_at && (
+                      <div className="flex items-start space-x-3">
+                        <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium">Member Since</p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(profile.created_at).toLocaleDateString('en-US', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-                
-                <div className="flex items-start space-x-3">
-                  <UserCheck className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium">Role</p>
-                    <p className="text-sm text-muted-foreground capitalize">{profile.role || 'User'}</p>
-                  </div>
-                </div>
-                
-                {profile.created_at && (
-                  <div className="flex items-start space-x-3">
-                    <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium">Member Since</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(profile.created_at).toLocaleDateString('en-US', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric'
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full">Edit Profile</Button>
-            </CardFooter>
+                </CardContent>
+                <CardFooter>
+                  {isAdmin && (
+                    <Button 
+                      variant="outline" 
+                      className="w-full" 
+                      onClick={() => setIsEditing(true)}
+                    >
+                      Edit Profile
+                    </Button>
+                  )}
+                </CardFooter>
+              </>
+            )}
           </Card>
 
           <Tabs defaultValue="properties" className="mt-6">
@@ -348,9 +409,13 @@ const ProfileDetail = () => {
                 </div>
               </div>
             </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full">Manage Permissions</Button>
-            </CardFooter>
+            {isAdmin && (
+              <CardFooter>
+                <Button variant="outline" className="w-full" onClick={() => setIsEditing(true)}>
+                  Manage Permissions
+                </Button>
+              </CardFooter>
+            )}
           </Card>
         </div>
       </div>
