@@ -26,6 +26,7 @@ import {
   saveThemeSettings,
   applyTheme as applyThemeService,
 } from "./theme/ThemeSettingsService";
+import { useQueryClient } from '@tanstack/react-query';
 
 export function ThemeCustomizer() {
   const { user } = useAuth();
@@ -35,6 +36,7 @@ export function ThemeCustomizer() {
   const [isLoading, setIsLoading] = useState(false);
   const [logoUrl, setLogoUrl] = useState("/lovable-uploads/33c86c21-a65a-47cc-bc48-c84732a3e5fd.png");
   const [newLogoUrl, setNewLogoUrl] = useState("");
+  const queryClient = useQueryClient();
 
   // Fetch existing theme settings
   useEffect(() => {
@@ -86,6 +88,9 @@ export function ThemeCustomizer() {
       
       // Apply theme
       applyTheme();
+      
+      // Invalidate any queries that might depend on theme settings
+      queryClient.invalidateQueries({ queryKey: ['app-settings'] });
       
       toast({
         title: "Theme Saved",

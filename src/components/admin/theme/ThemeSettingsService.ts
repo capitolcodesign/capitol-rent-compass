@@ -60,6 +60,10 @@ export const saveThemeSettings = async (
       }, { onConflict: 'key' });
     
     if (error) throw error;
+    
+    // Apply theme immediately after saving
+    applyTheme(themeSettings.primaryColor, themeSettings.secondaryColor);
+    
     return true;
   } catch (err) {
     console.error("Error saving theme settings:", err);
@@ -72,9 +76,24 @@ export const applyTheme = (primaryColor: string, secondaryColor: string): void =
   document.documentElement.style.setProperty('--element-orange', primaryColor);
   document.documentElement.style.setProperty('--element-navy', secondaryColor);
   
+  // Apply colors to root CSS variables for consistent application-wide styling
+  document.documentElement.style.setProperty('--primary', primaryColor);
+  document.documentElement.style.setProperty('--secondary', secondaryColor);
+  
+  // Update derived color variables
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', primaryColor);
+  
   // Show toast notification
   toast({
     title: "Theme Applied",
     description: "The theme changes have been applied to the UI.",
   });
+};
+
+// Initialize theme on app load
+export const initializeTheme = async (): Promise<void> => {
+  const settings = await fetchThemeSettings();
+  if (settings) {
+    applyTheme(settings.primaryColor, settings.secondaryColor);
+  }
 };

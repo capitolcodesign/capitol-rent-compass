@@ -1,10 +1,11 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Card, CardContent } from '@/components/ui/card';
 import { Image, ImageOff } from 'lucide-react';
+import { Lightbox } from '@/components/ui/lightbox';
 
 interface PropertyImageCarouselProps {
   propertyId: string;
@@ -46,28 +47,34 @@ const PropertyImageCarousel: React.FC<PropertyImageCarouselProps> = ({ propertyI
   return (
     <Carousel className="w-full">
       <CarouselContent>
-        {images.map((image) => (
-          <CarouselItem key={image.id}>
-            <Card>
-              <CardContent className="flex aspect-square items-center justify-center p-0 relative overflow-hidden">
-                <div className="w-full h-full relative">
-                  <img 
-                    src={image.storage_path.startsWith('http') 
-                      ? image.storage_path 
-                      : `${supabase.storage.from('property-images').getPublicUrl(image.storage_path).data.publicUrl}`} 
-                    alt={image.caption || 'Property image'} 
-                    className="w-full h-full object-cover rounded-md"
-                  />
-                  {image.caption && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 text-sm">
-                      {image.caption}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </CarouselItem>
-        ))}
+        {images.map((image) => {
+          const imageUrl = image.storage_path.startsWith('http') 
+            ? image.storage_path 
+            : `${supabase.storage.from('property-images').getPublicUrl(image.storage_path).data.publicUrl}`;
+            
+          return (
+            <CarouselItem key={image.id}>
+              <Card>
+                <CardContent className="flex aspect-square items-center justify-center p-0 relative overflow-hidden">
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Lightbox 
+                      src={imageUrl} 
+                      alt={image.caption || 'Property image'} 
+                      width={512} 
+                      height={512} 
+                      className="rounded-md"
+                    />
+                    {image.caption && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 text-sm">
+                        {image.caption}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </CarouselItem>
+          );
+        })}
       </CarouselContent>
       <CarouselPrevious className="left-2" />
       <CarouselNext className="right-2" />

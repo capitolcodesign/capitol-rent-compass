@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Trash2, Star, StarOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Lightbox } from '@/components/ui/lightbox';
 
 interface PropertyImage {
   id: string;
@@ -36,7 +37,6 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({ propertyId,
       if (error) throw error;
       
       if (data) {
-        // Convert the storage paths to URLs
         setImages(data as PropertyImage[]);
       }
     } catch (error) {
@@ -149,12 +149,16 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({ propertyId,
         
         return (
           <Card key={image.id} className="overflow-hidden">
-            <div className="relative aspect-video">
-              <img 
-                src={imageUrl} 
-                alt={image.caption || 'Property image'} 
-                className="w-full h-full object-cover"
-              />
+            <div className="relative">
+              <div className="aspect-video flex items-center justify-center">
+                <Lightbox
+                  src={imageUrl}
+                  alt={image.caption || 'Property image'}
+                  width={512}
+                  height={300}
+                  className="w-full h-full object-cover"
+                />
+              </div>
               {image.is_featured && (
                 <div className="absolute top-2 left-2 bg-yellow-500 text-white px-2 py-1 rounded-md text-xs font-bold flex items-center">
                   <Star className="w-3 h-3 mr-1" />
