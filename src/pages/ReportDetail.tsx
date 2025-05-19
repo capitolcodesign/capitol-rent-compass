@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,6 +44,13 @@ const ReportDetail = () => {
   const { data: report, isLoading, error } = useQuery({
     queryKey: ['report', id],
     queryFn: async () => {
+      if (!id) throw new Error("Report ID is required");
+      
+      // Fix: Handle the case where id might be "new"
+      if (id === 'new') {
+        throw new Error("Creating a new report is not implemented yet");
+      }
+      
       const { data, error } = await supabase
         .from('reports')
         .select('*')
@@ -50,11 +58,17 @@ const ReportDetail = () => {
         .single();
       
       if (error) {
+        console.error("Error fetching report:", error);
         throw new Error(error.message);
+      }
+      
+      if (!data) {
+        throw new Error("Report not found");
       }
       
       return data as Report;
     },
+    enabled: !!id && id !== 'new',
   });
 
   // Fetch the report template if a template_id exists
@@ -68,6 +82,7 @@ const ReportDetail = () => {
         .single();
       
       if (error) {
+        console.error("Error fetching template:", error);
         throw new Error(error.message);
       }
       
@@ -87,6 +102,7 @@ const ReportDetail = () => {
         .single();
       
       if (error) {
+        console.error("Error fetching creator:", error);
         throw new Error(error.message);
       }
       
@@ -180,6 +196,9 @@ const ReportDetail = () => {
           </CardHeader>
           <CardContent>
             <p>Unable to retrieve report information. The report may have been deleted or you may not have permission to view it.</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Error details: {error instanceof Error ? error.message : 'Unknown error'}
+            </p>
           </CardContent>
           <CardFooter>
             <Button onClick={() => navigate('/reports')}>Return to Reports</Button>

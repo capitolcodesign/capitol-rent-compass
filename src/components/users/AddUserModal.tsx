@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 import { adminCreateUser } from '@/contexts/auth/authService';
+import { createOrUpdateProfile } from '@/contexts/auth/userProfileService';
 
 interface AddUserModalProps {
   open: boolean;
@@ -75,7 +76,8 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
         role: data.role
       });
       
-      await adminCreateUser(
+      // First, create the user through Supabase Auth
+      const result = await adminCreateUser(
         data.email,
         data.password,
         data.firstName,
@@ -83,11 +85,22 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: AddUserModalProp
         data.role
       );
       
+      // If the auth user was created successfully but we need to ensure profile exists
+      if (result?.user?.id) {
+        // Ensure profile exists with correct role
+        await createOrUpdateProfile(result.user.id, {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          role: data.role as any
+        });
+      }
+      
       form.reset();
       if (onSuccess) {
         onSuccess();
       }
       onOpenChange(false);
+      
     } catch (error: any) {
       console.error('Error creating user:', error);
       // Toast is already shown in the adminCreateUser function

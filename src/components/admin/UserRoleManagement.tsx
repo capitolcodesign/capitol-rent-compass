@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { User, UserRole } from '@/contexts/auth/types';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,7 @@ import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ConfirmActionDialog } from './ConfirmActionDialog';
 import { UsersIcon, ShieldCheck, ShieldAlert, ShieldQuestion } from 'lucide-react';
+import { createOrUpdateProfile } from '@/contexts/auth/userProfileService';
 
 interface UserRoleManagementProps {
   user: User;
@@ -50,12 +50,12 @@ export function UserRoleManagement({ user, onUpdate }: UserRoleManagementProps) 
     
     setIsUpdating(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: selectedRole })
-        .eq('id', user.id);
-
-      if (error) throw error;
+      // Update the profile with the new role
+      const success = await createOrUpdateProfile(user.id, { role: selectedRole });
+      
+      if (!success) {
+        throw new Error("Failed to update user role");
+      }
       
       toast({
         title: "Role Updated",
@@ -78,15 +78,11 @@ export function UserRoleManagement({ user, onUpdate }: UserRoleManagementProps) 
   const handleDeleteUser = async () => {
     setIsDeleting(true);
     try {
-      // First, check if the deleted_at column exists in the profiles table
-      // If not, we need to use a different approach
+      // Update the profile to mark as inactive
       const { error } = await supabase
         .from('profiles')
         .update({ 
-          // Instead of setting deleted_at directly, use is_active flag
-          // which should exist in most user tables
           is_active: false,
-          // Add a comment in the updated_at field to mark as deactivated
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
