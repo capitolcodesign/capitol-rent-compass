@@ -29,7 +29,7 @@ const PropertyForm = () => {
     state: '',
     latitude: null as number | null,
     longitude: null as number | null,
-    description: ''
+    description: '' // Add description field to the state
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -76,7 +76,7 @@ const PropertyForm = () => {
             state: data.state || '',
             latitude: data.latitude || null,
             longitude: data.longitude || null,
-            description: data.description || ''
+            description: data.description || '' // Handle description from database
           });
         }
       } catch (error) {
@@ -177,7 +177,7 @@ const PropertyForm = () => {
             state: propertyData.state,
             latitude: propertyData.latitude,
             longitude: propertyData.longitude,
-            description: propertyData.description
+            description: propertyData.description // Include description in update
           })
           .eq('id', propertyData.id);
         
@@ -210,7 +210,7 @@ const PropertyForm = () => {
             state: propertyData.state,
             latitude: propertyData.latitude,
             longitude: propertyData.longitude,
-            description: propertyData.description,
+            description: propertyData.description, // Include description in insert
             user_id: user?.id
           })
           .select('id, property_id')
